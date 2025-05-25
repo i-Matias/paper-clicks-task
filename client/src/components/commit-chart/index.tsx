@@ -127,11 +127,13 @@ const CommitChart: React.FC<CommitChartProps> = ({
 
   return (
     <div className="chart-container">
-      {chartType === "line" ? (
-        <Line options={chartOptions} data={chartData} />
-      ) : (
-        <Bar options={chartOptions} data={chartData} />
-      )}
+      <div className="chart-wrapper">
+        {chartType === "line" ? (
+          <Line options={chartOptions} data={chartData} />
+        ) : (
+          <Bar options={chartOptions} data={chartData} />
+        )}
+      </div>
     </div>
   );
 };

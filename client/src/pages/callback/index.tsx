@@ -37,7 +37,7 @@ export default function Callback() {
           }
 
           addNotification("success", "Successfully logged in!");
-          navigate("/", { replace: true }); 
+          navigate("/", { replace: true });
         } else {
           setAuthError("Invalid response from server. Authentication failed.");
           addNotification(

@@ -187,7 +187,7 @@ const StarredRepositories: React.FC = () => {
       {reposList.length === 0 ? (
         <EmptyStateMessage />
       ) : (
-        <>
+        <div className="repositories-content">
           <RepositoriesList repositories={reposList} />
           <CommitVisualizationSection
             reposWithCommits={reposWithCommits}
@@ -197,7 +197,7 @@ const StarredRepositories: React.FC = () => {
             onRepoChange={handleRepoChange}
             onChartTypeToggle={handleChartTypeToggle}
           />
-        </>
+        </div>
       )}
     </div>
   );
@@ -216,15 +216,32 @@ interface RepositoriesListProps {
 const RepositoriesList: React.FC<RepositoriesListProps> = ({
   repositories,
 }) => (
-  <div className="repositories-simple-list">
+  <div className="repositories-grid">
     {repositories.map((repo) => (
-      <div key={repo.id} className="repository-list-item">
-        <a href={repo.url} target="_blank" rel="noopener noreferrer">
-          {repo.fullName}
-        </a>
+      <div key={repo.id} className="repository-card">
+        <div className="repository-card-header">
+          <a
+            href={repo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="repository-name"
+          >
+            {repo.fullName}
+          </a>
+        </div>
         {repo.description && (
           <p className="repository-description">{repo.description}</p>
         )}
+        <div className="repository-card-footer">
+          <a
+            href={repo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="view-repo-link"
+          >
+            View Repository
+          </a>
+        </div>
       </div>
     ))}
   </div>
@@ -249,65 +266,64 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
 }) => {
   return (
     <div className="commit-visualization-section">
-      <h3>Commit Visualization</h3>
-
-      <div className="repository-selector">
-        <div className="select-wrapper">
-          <CustomSelect
-            id="repo-select"
-            options={reposWithCommits.map((repo) => ({
-              id: repo.id,
-              name: repo.fullName,
-            }))}
-            value={selectedRepoId}
-            onChange={(value) => {
-              const syntheticEvent = {
-                target: { value },
-              } as React.ChangeEvent<HTMLSelectElement>;
-              onRepoChange(syntheticEvent);
-            }}
-            label="Select a repository to view commits:"
-          />
-        </div>
+      <div className="visualization-header">
+        <h3>Commit Visualization</h3>
 
         {selectedRepo && selectedRepo.commitCounts.length > 0 && (
           <div className="chart-toggle">
-            <label>Chart Type:</label>
             <button
-              className={chartType === "line" ? "active" : ""}
+              className={`toggle-btn ${chartType === "line" ? "active" : ""}`}
               onClick={() => onChartTypeToggle("line")}
+              aria-label="Show line chart"
+              title="Line Chart"
             >
-              Line
+              <span className="toggle-icon line-icon"></span>
             </button>
             <button
-              className={chartType === "bar" ? "active" : ""}
+              className={`toggle-btn ${chartType === "bar" ? "active" : ""}`}
               onClick={() => onChartTypeToggle("bar")}
+              aria-label="Show bar chart"
+              title="Bar Chart"
             >
-              Bar
+              <span className="toggle-icon bar-icon"></span>
             </button>
           </div>
         )}
       </div>
 
-      <div className="commit-chart-container">
-        {selectedRepo && selectedRepo.commitCounts.length > 0 ? (
-          <div className="commit-chart">
-            <CommitChart
-              commitCounts={selectedRepo.commitCounts}
-              repositoryName={selectedRepo.name}
-              chartType={chartType}
-            />
-          </div>
-        ) : selectedRepo ? (
-          <p className="no-commits">
-            No commit data available for this repository.
-          </p>
-        ) : (
-          <p className="no-repo-selected">
-            Please select a repository to view commit data.
-          </p>
-        )}
+      <div className="repository-selector">
+        <CustomSelect
+          id="repo-select"
+          options={reposWithCommits.map((repo) => ({
+            id: repo.id,
+            name: repo.fullName,
+          }))}
+          value={selectedRepoId}
+          onChange={(value) => {
+            const syntheticEvent = {
+              target: { value },
+            } as React.ChangeEvent<HTMLSelectElement>;
+            onRepoChange(syntheticEvent);
+          }}
+          label="Select a repository to view commits:"
+        />
       </div>
+
+      {selectedRepo && selectedRepo.commitCounts.length > 0 ? (
+        <CommitChart
+          commitCounts={selectedRepo.commitCounts}
+          repositoryName={selectedRepo.fullName}
+          chartType={chartType}
+        />
+      ) : (
+        <div className="no-commits-message">
+          {selectedRepo ? (
+            <p>No commit data available for this repository.</p>
+          ) : (
+            <p>Select a repository to view commit data.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

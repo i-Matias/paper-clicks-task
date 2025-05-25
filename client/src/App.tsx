@@ -11,7 +11,11 @@ export default function App() {
   return (
     <>
       <ErrorBoundary>
-        {isLoading ? <LoadingSpinner /> : <Content />}
+        {isLoading ? (
+          <LoadingSpinner fullScreen message="Loading application..." />
+        ) : (
+          <Content />
+        )}
       </ErrorBoundary>
       <ToastContainer />
     </>
