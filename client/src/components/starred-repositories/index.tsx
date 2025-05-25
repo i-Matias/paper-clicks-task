@@ -1,10 +1,131 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import repositoryService, {
   type Repository,
 } from "../../services/repository.service";
 import { useFetch } from "../../hooks/useFetch";
 import CommitChart from "../commit-chart";
 import "./styles.css";
+
+// Custom Select Component
+interface CustomSelectProps {
+  options: { id: string; name: string }[];
+  value: string | null;
+  onChange: (value: string) => void;
+  label: string;
+  id: string;
+}
+
+const CustomSelect: React.FC<CustomSelectProps> = ({
+  options,
+  value,
+  onChange,
+  label,
+  id,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const selectRef = useRef<HTMLDivElement>(null);
+
+  const selectedOption = options.find((option) => option.id === value);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (selectRef.current && !selectRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("click", handler);
+    return () => {
+      window.removeEventListener("click", handler);
+    };
+  }, []);
+
+  // Reset highlighted index when options change or dropdown opens
+  useEffect(() => {
+    if (isOpen) {
+      const selectedIndex = options.findIndex((option) => option.id === value);
+      if (selectedIndex >= 0) {
+        setHighlightedIndex(selectedIndex);
+      } else {
+        setHighlightedIndex(0);
+      }
+    }
+  }, [isOpen, options, value]);
+
+  const handleOptionClick = (optionId: string) => {
+    onChange(optionId);
+    setIsOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setIsOpen(false);
+    } else if (e.key === "Enter" || e.key === " ") {
+      setIsOpen((prev) => !prev);
+      if (isOpen && options[highlightedIndex]) {
+        onChange(options[highlightedIndex].id);
+        setIsOpen(false);
+      }
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      if (!isOpen) {
+        setIsOpen(true);
+        return;
+      }
+
+      const newIndex = highlightedIndex + (e.key === "ArrowDown" ? 1 : -1);
+      if (newIndex >= 0 && newIndex < options.length) {
+        setHighlightedIndex(newIndex);
+      }
+    }
+  };
+
+  return (
+    <div className="custom-select-container" ref={selectRef}>
+      <label htmlFor={id} className="custom-select-label">
+        {label}
+      </label>
+      <div
+        className={`custom-select ${isOpen ? "open" : ""}`}
+        tabIndex={0}
+        id={id}
+        onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={handleKeyDown}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        role="combobox"
+        aria-labelledby={id}
+        data-has-content={Boolean(value)}
+      >
+        <div className="custom-select-value">
+          {selectedOption ? selectedOption.name : "Select repository"}
+        </div>
+        <div className="custom-select-icon"></div>
+        {isOpen && (
+          <ul className="custom-select-options" role="listbox">
+            {options.map((option, index) => (
+              <li
+                key={option.id}
+                className={`custom-select-option ${
+                  option.id === value ? "selected" : ""
+                } ${index === highlightedIndex ? "highlighted" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOptionClick(option.id);
+                }}
+                role="option"
+                aria-selected={option.id === value}
+              >
+                {option.name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const StarredRepositories: React.FC = () => {
   const [chartType, setChartType] = useState<"line" | "bar">("line");
@@ -131,23 +252,22 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
       <h3>Commit Visualization</h3>
 
       <div className="repository-selector">
-        <label htmlFor="repo-select">
-          Select a repository to view commits:
-        </label>
         <div className="select-wrapper">
-          <select
+          <CustomSelect
             id="repo-select"
-            value={selectedRepoId || ""}
-            onChange={onRepoChange}
-            className="repository-select"
-            data-has-content={Boolean(selectedRepoId)}
-          >
-            {reposWithCommits.map((repo) => (
-              <option key={repo.id} value={repo.id}>
-                {repo.fullName}
-              </option>
-            ))}
-          </select>
+            options={reposWithCommits.map((repo) => ({
+              id: repo.id,
+              name: repo.fullName,
+            }))}
+            value={selectedRepoId}
+            onChange={(value) => {
+              const syntheticEvent = {
+                target: { value },
+              } as React.ChangeEvent<HTMLSelectElement>;
+              onRepoChange(syntheticEvent);
+            }}
+            label="Select a repository to view commits:"
+          />
         </div>
 
         {selectedRepo && selectedRepo.commitCounts.length > 0 && (
