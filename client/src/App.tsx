@@ -1,17 +1,19 @@
-import { useEffect } from "react";
 import Content from "./navigation/Content";
 import { useAutoLogin } from "./hooks/useAutoLogin";
+import ToastContainer from "./components/toast-container";
+import { ErrorBoundary } from "./components/error";
+import LoadingSpinner from "./components/loading-spinner";
 import "./App.css";
 
 export default function App() {
-  const { isAuthenticated } = useAutoLogin();
+  const { isLoading } = useAutoLogin();
 
-  useEffect(() => {
-    console.log(
-      "Authentication status:",
-      isAuthenticated ? "Authenticated" : "Not authenticated"
-    );
-  }, [isAuthenticated]);
-
-  return <Content />;
+  return (
+    <>
+      <ErrorBoundary>
+        {isLoading ? <LoadingSpinner /> : <Content />}
+      </ErrorBoundary>
+      <ToastContainer />
+    </>
+  );
 }

@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
 import authService from "../../services/auth.service";
 import "./style.css";
+import useNotificationStore from "../../stores/useNotificationStore";
 
 export default function Callback() {
-  const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { setToken, setUser, setGithubToken } = useAuthStore();
+  const { addNotification } = useNotificationStore();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -16,7 +18,8 @@ export default function Callback() {
         const code = params.get("code");
 
         if (!code) {
-          setError("Authorization code not found.");
+          setAuthError("Authorization code not found.");
+          addNotification("error", "Authorization code not found.");
           return;
         }
 
@@ -24,42 +27,53 @@ export default function Callback() {
 
         if (data.tokens && data.tokens.accessToken) {
           setToken(data.tokens.accessToken, data.tokens.expiresIn);
+
           if (data.githubToken) {
             setGithubToken(data.githubToken);
           }
+
           if (data.user) {
             setUser(data.user);
           }
-          navigate("/", { replace: true }); // Ensure redirection to root after successful login
+
+          addNotification("success", "Successfully logged in!");
+          navigate("/", { replace: true }); // Ensure redirection to root
         } else {
-          setError("Invalid response from server. Authentication failed.");
+          setAuthError("Invalid response from server. Authentication failed.");
+          addNotification(
+            "error",
+            "Invalid response from server. Authentication failed."
+          );
         }
       } catch (error) {
         console.error("Authentication error:", error);
-        // If it's an AxiosError with a response, try to extract the error message
+
+        // Extract the error message
+        let errorMessage = "Authentication failed. Please try again.";
         if (error && typeof error === "object" && "response" in error) {
           const response = (
             error as { response?: { data?: { error?: string } } }
           ).response;
           if (response?.data?.error) {
-            setError(`Authentication failed: ${response.data.error}`);
-          } else {
-            setError("Authentication failed. Please try again.");
+            errorMessage = `Authentication failed: ${response.data.error}`;
           }
-        } else {
-          setError("Authentication failed. Please try again.");
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
         }
+
+        setAuthError(errorMessage);
+        addNotification("error", errorMessage);
       }
     };
 
     handleCallback();
-  }, [navigate, setToken, setUser]);
+  }, [navigate, setToken, setUser, setGithubToken, addNotification]);
 
-  if (error) {
+  if (authError) {
     return (
       <div className="callback-error">
         <h2>Authentication Error</h2>
-        <p>{error}</p>
+        <p>{authError}</p>
         <button className="back-button" onClick={() => navigate("/login")}>
           Back to Login
         </button>

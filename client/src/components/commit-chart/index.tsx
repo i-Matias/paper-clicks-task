@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   BarElement,
+  type TooltipItem,
 } from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
 import "./styles.css";
@@ -25,23 +26,44 @@ ChartJS.register(
   Legend
 );
 
+/**
+ * Interface for commit count data point
+ */
 interface CommitCount {
   id: string;
   count: number;
   date: string;
 }
 
+/**
+ * Props for the CommitChart component
+ */
 interface CommitChartProps {
+  /** Array of commit counts to display */
   commitCounts: CommitCount[];
+  /** Name of the repository */
   repositoryName: string;
+  /** Type of chart to display */
   chartType?: "line" | "bar";
 }
 
+/**
+ * A component that displays commit activity data in chart form
+ */
 const CommitChart: React.FC<CommitChartProps> = ({
   commitCounts,
   repositoryName,
   chartType = "line",
 }) => {
+  // Early return if no data is available
+  if (!commitCounts.length) {
+    return (
+      <div className="empty-chart">
+        <p>No commit data available for this repository.</p>
+      </div>
+    );
+  }
+
   // Sort commit counts by date
   const sortedCounts = [...commitCounts].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -54,12 +76,13 @@ const CommitChart: React.FC<CommitChartProps> = ({
       ? sortedCounts.slice(sortedCounts.length - maxDataPoints)
       : sortedCounts;
 
-  // Prepare data for chart
+  // Prepare data for chart - format dates for display
   const labels = limitedCounts.map((count) =>
     new Date(count.date).toLocaleDateString()
   );
 
-  const data = {
+  // Configure chart data
+  const chartData = {
     labels,
     datasets: [
       {
@@ -72,8 +95,8 @@ const CommitChart: React.FC<CommitChartProps> = ({
     ],
   };
 
-  // Using any type to bypass strict type checking for chart configuration
-  const options: any = {
+  // Configure chart options
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -83,16 +106,20 @@ const CommitChart: React.FC<CommitChartProps> = ({
       title: {
         display: true,
         text: `Commit History for ${repositoryName}`,
+        font: {
+          size: 16,
+          weight: "bold" as const,
+        },
       },
       tooltip: {
         callbacks: {
-          title: (items: any[]) => {
-            if (!items.length) return "";
-            const index = items[0].dataIndex;
+          title: (context: TooltipItem<"line" | "bar">[]) => {
+            if (!context.length) return "";
+            const index = context[0].dataIndex;
             return labels[index];
           },
-          label: (item: any) => {
-            return `Commits: ${item.raw}`;
+          label: (context: TooltipItem<"line" | "bar">) => {
+            return `Commits: ${context.raw}`;
           },
         },
       },
@@ -117,20 +144,13 @@ const CommitChart: React.FC<CommitChartProps> = ({
     },
   };
 
-  if (!commitCounts.length) {
-    return (
-      <div className="empty-chart">
-        <p>No commit data available for this repository.</p>
-      </div>
-    );
-  }
-
+  // Render the appropriate chart type
   return (
     <div className="chart-container">
       {chartType === "line" ? (
-        <Line options={options} data={data} />
+        <Line options={chartOptions} data={chartData} />
       ) : (
-        <Bar options={options} data={data} />
+        <Bar options={chartOptions} data={chartData} />
       )}
     </div>
   );

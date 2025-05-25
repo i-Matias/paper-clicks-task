@@ -127,7 +127,7 @@
     z-index: 2;
 }
 
-.modern-select {
+.repository-select {
     width: 100%;
     padding: 0.75rem 1rem;
     border-radius: 8px;
@@ -145,7 +145,7 @@
     color: #24292e;
 }
 
-.modern-select[data-has-content="true"] {
+.repository-select[data-has-content="true"] {
     background-color: #fff;
     font-weight: 500;
     color: #0969da;
@@ -171,13 +171,13 @@
 }
 
 .repository-selector select:hover,
-.modern-select:hover {
+.repository-select:hover {
     border-color: #0969da;
     box-shadow: 0 2px 8px rgba(9, 105, 218, 0.1);
 }
 
 .repository-selector select:focus,
-.modern-select:focus {
+.repository-select:focus {
     border-color: #0969da;
     outline: none;
     box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.2);
@@ -187,7 +187,7 @@
 }
 
 /* Style for select options (works in some modern browsers) */
-.modern-select option {
+.repository-select option {
     padding: 12px 15px;
     background-color: white;
     color: #24292e;
@@ -199,33 +199,33 @@
 
 /* Firefox specific styles */
 @-moz-document url-prefix() {
-    .modern-select {
+    .repository-select {
         border: 1px solid #d0d7de;
         border-radius: 8px;
         padding: 0.75rem 1rem;
     }
 
-    .modern-select option {
+    .repository-select option {
         padding: 12px 15px;
         border-bottom: 1px solid #f0f0f0;
     }
 }
 
 /* Webkit browsers (Chrome, Safari) */
-.modern-select option:hover,
-.modern-select option:focus {
+.repository-select option:hover,
+.repository-select option:focus {
     background-color: #f6f8fa;
     color: #0366d6;
 }
 
-.modern-select option:checked {
+.repository-select option:checked {
     background-color: #f1f8ff;
     color: #0366d6;
     font-weight: 500;
     box-shadow: 0 0 0 1px #0366d6;
 }
 
-.modern-select option:first-of-type {
+.repository-select option:first-of-type {
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
     font-style: italic;
@@ -233,24 +233,24 @@
 }
 
 /* Selected state */
-.modern-select option:checked::before {
+.repository-select option:checked::before {
     content: '✓ ';
     color: #0366d6;
 }
 
 /* Enhanced dropdown options */
-.modern-select option {
+.repository-select option {
     transition: background-color 0.15s ease;
     position: relative;
     padding: 12px 15px 12px 30px;
 }
 
-.modern-select option:hover {
+.repository-select option:hover {
     background-color: #f0f6fc;
 }
 
 /* Custom styling for placeholder option */
-.modern-select option[value=""] {
+.repository-select option[value=""] {
     font-style: italic;
     color: #57606a;
     background-color: #f6f8fa;
@@ -354,8 +354,10 @@
 
 .chart-toggle {
     display: flex;
+    align-items: center;
     border-radius: 6px;
     overflow: hidden;
+    gap: 0.25rem;
 }
 
 .chart-toggle button {
@@ -437,7 +439,7 @@
     }
 
     .select-wrapper,
-    .modern-select {
+    .repository-select {
         width: 100%;
     }
 
@@ -451,7 +453,7 @@
 }
 
 /* Custom animation for dropdown (works in some browsers) */
-.modern-select {
+.repository-select {
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -486,26 +488,26 @@
 }
 
 /* Custom scrollbar for the dropdown (Chrome, Edge, Safari) */
-.modern-select option::-webkit-scrollbar {
+.repository-select option::-webkit-scrollbar {
     width: 8px;
 }
 
-.modern-select option::-webkit-scrollbar-track {
+.repository-select option::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
 }
 
-.modern-select option::-webkit-scrollbar-thumb {
+.repository-select option::-webkit-scrollbar-thumb {
     background: #c4c9cc;
     border-radius: 4px;
 }
 
-.modern-select option::-webkit-scrollbar-thumb:hover {
+.repository-select option::-webkit-scrollbar-thumb:hover {
     background: #a0a5a9;
 }
 
 /* Enhanced dropdown appearance */
-.modern-select:focus+.select-dropdown {
+.repository-select:focus+.select-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -534,14 +536,14 @@
 }
 
 /* Improved focus and hover states */
-.modern-select:focus {
+.repository-select:focus {
     border-color: #0969da;
     box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
     outline: none;
 }
 
 /* Option group styling (if you use them in the future) */
-.modern-select optgroup {
+.repository-select optgroup {
     font-weight: 600;
     color: #24292e;
     background-color: #f6f8fa;

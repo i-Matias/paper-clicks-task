@@ -1,34 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import repositoryService, {
   type Repository,
 } from "../../services/repository.service";
+import { useFetch } from "../../hooks/useFetch";
 import CommitChart from "../commit-chart";
 import "./styles.css";
 
-interface StarredRepositoriesProps {
-  onError?: (error: string) => void;
-}
-
-const StarredRepositories: React.FC<StarredRepositoriesProps> = ({
-  onError,
-}) => {
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+/**
+ * Component that displays a user's starred GitHub repositories and commit activity
+ */
+const StarredRepositories: React.FC = () => {
   const [chartType, setChartType] = useState<"line" | "bar">("line");
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchRepositories = async () => {
-      try {
-        setLoading(true);
-        const repos = await repositoryService.getStarredRepositories();
-        setRepositories(repos);
+  // Fetch repositories data
+  const { data: repositories, loading } = useFetch<Repository[]>(
+    repositoryService.getStarredRepositories,
+    {
+      transformData: (data: unknown) => {
+        // Cast data to Repository[] since we know the type from API
+        const repos = data as Repository[];
 
-        // If repositories are loaded and there's at least one with commit data,
-        // select the first one for the chart
-        if (repos.length > 0) {
+        // Auto-select the first repository with commit data
+        if (repos.length > 0 && !selectedRepoId) {
           const repoWithCommits = repos.find(
             (repo) => repo.commitCounts && repo.commitCounts.length > 0
           );
@@ -36,72 +30,39 @@ const StarredRepositories: React.FC<StarredRepositoriesProps> = ({
             setSelectedRepoId(repoWithCommits.id);
           }
         }
-      } catch (error) {
-        console.error("Error fetching repositories:", error);
-        if (onError) onError("Failed to load repositories");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRepositories();
-  }, [onError]);
-
-  const handleSync = async () => {
-    try {
-      setSyncing(true);
-      setSyncMessage("Syncing commit counts...");
-      const result = await repositoryService.syncCommitCounts();
-      setSyncMessage(result.message);
-
-      // Refresh repositories after sync
-      const repos = await repositoryService.getStarredRepositories();
-      setRepositories(repos);
-    } catch (error) {
-      console.error("Error syncing commits:", error);
-      setSyncMessage("Failed to sync commit counts");
-      if (onError) onError("Failed to sync commit counts");
-    } finally {
-      setSyncing(false);
-      setTimeout(() => {
-        setSyncMessage(null);
-      }, 3000);
+        return repos;
+      },
+      showErrorNotification: false,
     }
-  };
+  );
+
+  // Create a memoized safe list to avoid re-rendering issues
+  const reposList = useMemo(() => repositories || [], [repositories]);
 
   // Find the currently selected repository
-  const selectedRepo = repositories.find((repo) => repo.id === selectedRepoId);
+  const selectedRepo = useMemo(
+    () => reposList.find((repo) => repo.id === selectedRepoId),
+    [reposList, selectedRepoId]
+  );
 
-  // Track dropdown state for animations
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Add keyboard handler for better accessibility
-  const handleSelectKeyDown = (e: React.KeyboardEvent<HTMLSelectElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      // Let the browser handle the dropdown opening
-      return;
-    }
-
-    // Allow quick selection with first letter
-    const key = e.key.toLowerCase();
-    if (key.length === 1 && key.match(/[a-z0-9]/)) {
-      const filteredRepos = repositories.filter(
+  // Find repositories that have commit data
+  const reposWithCommits = useMemo(
+    () =>
+      reposList.filter(
         (repo) => repo.commitCounts && repo.commitCounts.length > 0
-      );
+      ),
+    [reposList]
+  );
 
-      const matchingRepo = filteredRepos.find((repo) =>
-        repo.name.toLowerCase().startsWith(key)
-      );
-
-      if (matchingRepo) {
-        setSelectedRepoId(matchingRepo.id);
-      }
-    }
+  // Handle repository selection change
+  const handleRepoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedRepoId(e.target.value || null);
   };
 
-  // Handle dropdown focus events
-  const handleSelectFocus = () => setIsDropdownOpen(true);
-  const handleSelectBlur = () => setIsDropdownOpen(false);
+  // Handle chart type toggle
+  const handleChartTypeToggle = (type: "line" | "bar") => {
+    setChartType(type);
+  };
 
   if (loading) {
     return <div className="repositories-loading">Loading repositories...</div>;
@@ -111,112 +72,142 @@ const StarredRepositories: React.FC<StarredRepositoriesProps> = ({
     <div className="repositories-container">
       <div className="repositories-header">
         <h2>Starred GitHub Repositories</h2>
-        <button onClick={handleSync} disabled={syncing} className="sync-button">
-          {syncing ? "Syncing..." : "Sync Commit Counts"}
-        </button>
-        {syncMessage && <div className="sync-message">{syncMessage}</div>}
       </div>
 
-      {repositories.length === 0 ? (
-        <div className="no-repositories">
-          <p>You haven't starred any GitHub repositories yet.</p>
-        </div>
+      {reposList.length === 0 ? (
+        <EmptyStateMessage />
       ) : (
         <>
-          {/* Simple Repository List */}
-          <div className="repositories-simple-list">
-            {repositories.map((repo) => (
-              <div key={repo.id} className="repository-list-item">
-                <a href={repo.url} target="_blank" rel="noopener noreferrer">
-                  {repo.fullName}
-                </a>
-                {repo.description && (
-                  <p className="repository-description">{repo.description}</p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Chart Section */}
-          <div className="commit-visualization-section">
-            <h3>Commit Visualization</h3>
-
-            {/* Repository Selector */}
-            <div className="repository-selector">
-              <label htmlFor="repo-select">
-                Select a repository to view commits:
-              </label>
-              <div
-                className={`select-wrapper ${isDropdownOpen ? "active" : ""}`}
-              >
-                <select
-                  id="repo-select"
-                  value={selectedRepoId || ""}
-                  onChange={(e) => setSelectedRepoId(e.target.value || null)}
-                  onKeyDown={handleSelectKeyDown}
-                  onFocus={handleSelectFocus}
-                  onBlur={handleSelectBlur}
-                  className="modern-select"
-                  data-has-content={Boolean(selectedRepoId)}
-                >
-                  <option value="">-- Select a repository --</option>
-                  {repositories
-                    .filter(
-                      (repo) =>
-                        repo.commitCounts && repo.commitCounts.length > 0
-                    )
-                    .map((repo) => (
-                      <option key={repo.id} value={repo.id}>
-                        {repo.fullName}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {/* Chart Type Toggle */}
-              {selectedRepo && selectedRepo.commitCounts.length > 0 && (
-                <div className="chart-toggle">
-                  <label>Chart Type:</label>
-                  <button
-                    className={chartType === "line" ? "active" : ""}
-                    onClick={() => setChartType("line")}
-                  >
-                    Line
-                  </button>
-                  <button
-                    className={chartType === "bar" ? "active" : ""}
-                    onClick={() => setChartType("bar")}
-                  >
-                    Bar
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Chart Display */}
-            <div className="commit-chart-container">
-              {selectedRepo && selectedRepo.commitCounts.length > 0 ? (
-                <div className="commit-chart">
-                  <CommitChart
-                    commitCounts={selectedRepo.commitCounts}
-                    repositoryName={selectedRepo.name}
-                    chartType={chartType}
-                  />
-                </div>
-              ) : selectedRepo ? (
-                <p className="no-commits">
-                  No commit data available for this repository. Use the Sync
-                  button to fetch commit counts.
-                </p>
-              ) : (
-                <p className="no-repo-selected">
-                  Please select a repository to view commit data.
-                </p>
-              )}
-            </div>
-          </div>
+          <RepositoriesList repositories={reposList} />
+          <CommitVisualizationSection
+            reposWithCommits={reposWithCommits}
+            selectedRepo={selectedRepo}
+            selectedRepoId={selectedRepoId}
+            chartType={chartType}
+            onRepoChange={handleRepoChange}
+            onChartTypeToggle={handleChartTypeToggle}
+          />
         </>
       )}
+    </div>
+  );
+};
+
+/**
+ * Message shown when user has no starred repositories
+ */
+const EmptyStateMessage: React.FC = () => (
+  <div className="no-repositories">
+    <p>You haven't starred any GitHub repositories yet.</p>
+  </div>
+);
+
+/**
+ * List of repositories
+ */
+interface RepositoriesListProps {
+  repositories: Repository[];
+}
+
+const RepositoriesList: React.FC<RepositoriesListProps> = ({
+  repositories,
+}) => (
+  <div className="repositories-simple-list">
+    {repositories.map((repo) => (
+      <div key={repo.id} className="repository-list-item">
+        <a href={repo.url} target="_blank" rel="noopener noreferrer">
+          {repo.fullName}
+        </a>
+        {repo.description && (
+          <p className="repository-description">{repo.description}</p>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+/**
+ * Section for commit visualization
+ */
+interface CommitVisualizationSectionProps {
+  reposWithCommits: Repository[];
+  selectedRepo: Repository | undefined;
+  selectedRepoId: string | null;
+  chartType: "line" | "bar";
+  onRepoChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onChartTypeToggle: (type: "line" | "bar") => void;
+}
+
+const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
+  reposWithCommits,
+  selectedRepo,
+  selectedRepoId,
+  chartType,
+  onRepoChange,
+  onChartTypeToggle,
+}) => {
+  return (
+    <div className="commit-visualization-section">
+      <h3>Commit Visualization</h3>
+
+      <div className="repository-selector">
+        <label htmlFor="repo-select">
+          Select a repository to view commits:
+        </label>
+        <div className="select-wrapper">
+          <select
+            id="repo-select"
+            value={selectedRepoId || ""}
+            onChange={onRepoChange}
+            className="repository-select"
+            data-has-content={Boolean(selectedRepoId)}
+          >
+            {reposWithCommits.map((repo) => (
+              <option key={repo.id} value={repo.id}>
+                {repo.fullName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {selectedRepo && selectedRepo.commitCounts.length > 0 && (
+          <div className="chart-toggle">
+            <label>Chart Type:</label>
+            <button
+              className={chartType === "line" ? "active" : ""}
+              onClick={() => onChartTypeToggle("line")}
+            >
+              Line
+            </button>
+            <button
+              className={chartType === "bar" ? "active" : ""}
+              onClick={() => onChartTypeToggle("bar")}
+            >
+              Bar
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="commit-chart-container">
+        {selectedRepo && selectedRepo.commitCounts.length > 0 ? (
+          <div className="commit-chart">
+            <CommitChart
+              commitCounts={selectedRepo.commitCounts}
+              repositoryName={selectedRepo.name}
+              chartType={chartType}
+            />
+          </div>
+        ) : selectedRepo ? (
+          <p className="no-commits">
+            No commit data available for this repository.
+          </p>
+        ) : (
+          <p className="no-repo-selected">
+            Please select a repository to view commit data.
+          </p>
+        )}
+      </div>
     </div>
   );
 };

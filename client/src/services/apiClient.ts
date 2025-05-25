@@ -5,10 +5,20 @@ import axios, {
 } from "axios";
 import useAuthStore from "../stores/useAuthStore";
 
+/**
+ * Base URL for API requests
+ * In a production environment, this would be read from environment variables
+ */
+const API_BASE_URL = "http://localhost:5001";
+
+/**
+ * Axios instance with base configuration
+ */
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5001",
+  baseURL: API_BASE_URL,
 });
 
+// Request interceptor to add auth token and headers to requests
 axiosInstance.interceptors.request.use(
   (request: InternalAxiosRequestConfig) => {
     // Only set the Authorization header for endpoints that aren't public auth endpoints
@@ -27,6 +37,8 @@ axiosInstance.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// Response interceptor for centralized error handling
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
@@ -132,6 +144,10 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+/**
+ * Generic API client for making type-safe HTTP requests
+ * T represents the expected response data type
+ */
 class APIClient<T> {
   endpoint: string;
 
@@ -139,52 +155,85 @@ class APIClient<T> {
     this.endpoint = endpoint;
   }
 
-  /** get single*/
-  get = (config?: AxiosRequestConfig) => {
+  /**
+   * Make a GET request to retrieve data
+   * @param config Optional Axios request configuration
+   * @returns Promise with response data
+   */
+  get = (config?: AxiosRequestConfig): Promise<T> => {
     return axiosInstance.get<T>(this.endpoint, config).then((res) => res.data);
   };
 
-  getById = (id?: string) => {
+  /**
+   * Get a resource by ID appended as a query param
+   * @param id Resource identifier
+   * @returns Promise with response data
+   */
+  getById = (id?: string): Promise<T> => {
     return axiosInstance
       .get<T>(this.endpoint + "?" + id)
       .then((res) => res.data);
   };
 
-  getByIdParams = (payload: string | number) => {
+  /**
+   * Get a resource by ID appended as path param
+   * @param payload Resource identifier
+   * @returns Promise with response data
+   */
+  getByIdParams = (payload: string | number): Promise<T> => {
     return axiosInstance
-      .get<T>(this.endpoint + "/" + payload)
+      .get<T>(`${this.endpoint}/${payload}`)
       .then((res) => res.data);
   };
 
-  /** get multiple*/
-  getAll = (config?: AxiosRequestConfig) => {
+  /**
+   * Get multiple resources
+   * @param config Optional Axios request configuration
+   * @returns Promise with array of response data
+   */
+  getAll = (config?: AxiosRequestConfig): Promise<T[]> => {
     return axiosInstance
       .get<T[]>(this.endpoint, config)
       .then((res) => res.data);
   };
 
-  /** post */
+  /**
+   * Create a new resource
+   * @param payload Data to be sent in the request body
+   * @param config Optional Axios request configuration
+   * @returns Promise with response data
+   */
   post = <U = Record<string, unknown>>(
     payload?: U,
     config?: AxiosRequestConfig
-  ) => {
+  ): Promise<T> => {
     return axiosInstance
       .post<T>(this.endpoint, payload, config)
       .then((res) => res.data);
   };
 
-  /** update */
-  patch = (payload: { id: number | string; data: Record<string, unknown> }) => {
-    return axiosInstance.patch<T>(
-      this.endpoint + "/" + payload.id,
-      payload.data
-    );
+  /**
+   * Update an existing resource
+   * @param payload Object containing ID and data to update
+   * @returns Promise with response data
+   */
+  patch = (payload: {
+    id: number | string;
+    data: Record<string, unknown>;
+  }): Promise<T> => {
+    return axiosInstance
+      .patch<T>(`${this.endpoint}/${payload.id}`, payload.data)
+      .then((res) => res.data);
   };
 
-  /** delete */
-  delete = (payload: string | number) => {
+  /**
+   * Delete a resource
+   * @param payload Resource identifier
+   * @returns Promise with response data
+   */
+  delete = (payload: string | number): Promise<unknown> => {
     return axiosInstance
-      .delete(this.endpoint + "/" + payload)
+      .delete(`${this.endpoint}/${payload}`)
       .then((res) => res.data);
   };
 }
