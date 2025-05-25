@@ -8,7 +8,10 @@ export default function PrivateRoute({
   children: ReactElement;
   permission?: string;
 }): ReactElement {
-  const { token, isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isTokenValid } = useAuthStore();
 
-  return token && isAuthenticated ? children : <Navigate to="/login" />;
+  // Check both authentication flag and token validity
+  const isAuthorized = isAuthenticated && isTokenValid();
+
+  return isAuthorized ? children : <Navigate to="/login" />;
 }

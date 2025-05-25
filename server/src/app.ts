@@ -1,39 +1,36 @@
 import express from "express";
 import cors from "cors";
-import passport from "passport";
 import dotenv from "dotenv";
-import authRouter from "./routers/authRouter";
-import { configurePassport } from "./config/passport";
+import authRoutes from "./routes/auth.routes";
+import { validateConfig } from "./config/auth.config";
+import { errorHandler } from "./middleware/error.middleware";
 
-// Load environment variables
 dotenv.config();
+
+validateConfig();
 
 const app = express();
 
-// Middleware
-app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173", // Frontend URL
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+app.use(express.json());
 
-// Initialize Passport for GitHub OAuth (without sessions)
-configurePassport();
-app.use(passport.initialize());
+app.use(
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.log(`Incoming request: ${req.method} ${req.path}`);
+    console.log(`Origin: ${req.headers.origin}`);
+    next();
+  }
+);
 
-// API Routes
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authRoutes);
 
-// Health check route
-app.get("/health", (_, res) => {
-  res.status(200).json({ status: "ok" });
-});
-
-// Handle 404s
-app.use((_, res) => {
-  res.status(404).json({ error: "Not found" });
-});
+app.use(errorHandler);
 
 export default app;

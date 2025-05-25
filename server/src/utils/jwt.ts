@@ -1,41 +1,32 @@
 import jwt from "jsonwebtoken";
-import { User } from "@prisma/client";
+import { config } from "../config/auth.config";
+import { UserPayload } from "../types/auth.types";
 
-// Define the payload structure
-interface JwtPayload {
-  userId: string;
-  githubId: string;
-  username: string;
-}
+export const generateToken = (
+  user: UserPayload
+): { accessToken: string; expiresIn: number } => {
+  const expiresIn = config.jwt.expiresIn;
 
-export const jwtUtils = {
-  /**
-   * Generate a JWT token for a user
-   */
-  generateToken(user: User): string {
-    const payload: JwtPayload = {
-      userId: user.id,
-      githubId: user.githubId,
-      username: user.username,
-    };
+  const accessToken = jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+    },
+    config.jwt.secret,
+    { expiresIn }
+  );
 
-    return jwt.sign(payload, process.env.JWT_SECRET || "your-secret-key", {
-      expiresIn: "7d",
-    });
-  },
+  return {
+    accessToken,
+    expiresIn,
+  };
+};
 
-  /**
-   * Verify and decode a JWT token
-   */
-  verifyToken(token: string): JwtPayload | null {
-    try {
-      return jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your-secret-key"
-      ) as JwtPayload;
-    } catch (error) {
-      console.error("JWT verification failed:", error);
-      return null;
-    }
-  },
+export const verifyToken = (token: string): UserPayload | null => {
+  try {
+    const decoded = jwt.verify(token, config.jwt.secret) as UserPayload;
+    return decoded;
+  } catch (error) {
+    return null;
+  }
 };
