@@ -1,29 +1,15 @@
 import React from "react";
 import "./styles.css";
 
-/**
- * User profile data interface
- */
 export interface ProfileProps {
-  /** Unique user ID */
   id: string;
-  /** GitHub username */
   username: string;
-  /** User email address */
   email: string;
-  /** URL to user's avatar image */
   avatarUrl: string;
-  /** Account creation date (ISO string) */
   createdAt: string;
-  /** Last account update date (ISO string) */
   updatedAt: string;
 }
 
-/**
- * Format a date string for display
- * @param dateStr ISO date string
- * @returns Formatted date string
- */
 const formatDate = (dateStr: string): string => {
   try {
     return new Date(dateStr).toLocaleDateString(undefined, {
@@ -37,9 +23,6 @@ const formatDate = (dateStr: string): string => {
   }
 };
 
-/**
- * Component that displays user profile information
- */
 const Profile: React.FC<ProfileProps> = ({
   username,
   email,

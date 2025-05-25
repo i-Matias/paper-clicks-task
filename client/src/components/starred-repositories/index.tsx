@@ -6,22 +6,16 @@ import { useFetch } from "../../hooks/useFetch";
 import CommitChart from "../commit-chart";
 import "./styles.css";
 
-/**
- * Component that displays a user's starred GitHub repositories and commit activity
- */
 const StarredRepositories: React.FC = () => {
   const [chartType, setChartType] = useState<"line" | "bar">("line");
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
 
-  // Fetch repositories data
   const { data: repositories, loading } = useFetch<Repository[]>(
     repositoryService.getStarredRepositories,
     {
       transformData: (data: unknown) => {
-        // Cast data to Repository[] since we know the type from API
         const repos = data as Repository[];
 
-        // Auto-select the first repository with commit data
         if (repos.length > 0 && !selectedRepoId) {
           const repoWithCommits = repos.find(
             (repo) => repo.commitCounts && repo.commitCounts.length > 0
@@ -36,16 +30,13 @@ const StarredRepositories: React.FC = () => {
     }
   );
 
-  // Create a memoized safe list to avoid re-rendering issues
   const reposList = useMemo(() => repositories || [], [repositories]);
 
-  // Find the currently selected repository
   const selectedRepo = useMemo(
     () => reposList.find((repo) => repo.id === selectedRepoId),
     [reposList, selectedRepoId]
   );
 
-  // Find repositories that have commit data
   const reposWithCommits = useMemo(
     () =>
       reposList.filter(
@@ -54,12 +45,10 @@ const StarredRepositories: React.FC = () => {
     [reposList]
   );
 
-  // Handle repository selection change
   const handleRepoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedRepoId(e.target.value || null);
   };
 
-  // Handle chart type toggle
   const handleChartTypeToggle = (type: "line" | "bar") => {
     setChartType(type);
   };
@@ -93,18 +82,12 @@ const StarredRepositories: React.FC = () => {
   );
 };
 
-/**
- * Message shown when user has no starred repositories
- */
 const EmptyStateMessage: React.FC = () => (
   <div className="no-repositories">
     <p>You haven't starred any GitHub repositories yet.</p>
   </div>
 );
 
-/**
- * List of repositories
- */
 interface RepositoriesListProps {
   repositories: Repository[];
 }
@@ -126,9 +109,6 @@ const RepositoriesList: React.FC<RepositoriesListProps> = ({
   </div>
 );
 
-/**
- * Section for commit visualization
- */
 interface CommitVisualizationSectionProps {
   reposWithCommits: Repository[];
   selectedRepo: Repository | undefined;

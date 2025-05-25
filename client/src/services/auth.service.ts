@@ -47,7 +47,6 @@ class AuthService {
     } catch (error) {
       console.error("Error handling callback:", error);
 
-      // Provide more descriptive error messages
       if (error instanceof Error) {
         if (error.message.includes("invalid_grant")) {
           throw new Error(
@@ -74,7 +73,6 @@ class AuthService {
     } catch (error) {
       console.error("Error fetching current user:", error);
 
-      // Provide more descriptive error messages
       if (error instanceof Error) {
         if (
           error.message.includes("session has expired") ||

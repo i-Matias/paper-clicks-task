@@ -27,22 +27,15 @@ export class ErrorBoundary extends Component<
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("Component error caught:", error, errorInfo);
 
-    // Format the message based on environment
     const errorMessage =
       process.env.NODE_ENV === "production"
         ? `An error occurred: ${error.message}`
         : `An error occurred: ${error.message}\n\nCheck console for details`;
 
-    // Use react-toastify directly
     toast.error(errorMessage, {
       autoClose: false,
       onClick: () => console.error("Error details:", error, errorInfo),
     });
-
-    // Optionally send to an error reporting service
-    // if (process.env.NODE_ENV === 'production') {
-    //   reportErrorToService(error, errorInfo);
-    // }
   }
 
   render(): ReactNode {

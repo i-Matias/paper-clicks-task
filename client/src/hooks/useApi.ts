@@ -1,47 +1,21 @@
 import { useState, useCallback } from "react";
 import useNotificationStore from "../stores/useNotificationStore";
 
-/**
- * Configuration options for useApi hook
- * @template T The expected response data type
- */
 interface UseApiOptions<T> {
-  /** Whether to show a success notification after successful API call */
   showSuccessNotification?: boolean;
-  /** Whether to show an error notification on failed API call */
   showErrorNotification?: boolean;
-  /** Custom success message for notifications */
   successMessage?: string;
-  /** Callback function to run after successful API call */
   onSuccess?: (data: T) => void;
 }
 
-/**
- * Result object returned by useApi hook
- * @template T The expected response data type
- * @template P The parameters type for the API call function
- */
 interface UseApiResult<T, P> {
-  /** The data returned from the API call */
   data: T | null;
-  /** Whether an API call is in progress */
   loading: boolean;
-  /** Error message if API call failed */
   error: string | null;
-  /** Function to execute the API call */
   execute: (params: P) => Promise<T>;
-  /** Function to reset the hook state */
   reset: () => void;
 }
 
-/**
- * A hook for handling API calls with integrated loading, error states and notifications
- * @template T The expected response data type
- * @template P The parameters type for the API call function
- * @param apiCall The API function to call
- * @param options Configuration options
- * @returns Object containing data, loading state, error state, execute function, and reset function
- */
 export function useApi<T, P = void>(
   apiCall: (params: P) => Promise<T>,
   options: UseApiOptions<T> = {}

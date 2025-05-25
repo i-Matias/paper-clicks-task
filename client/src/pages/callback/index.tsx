@@ -37,7 +37,7 @@ export default function Callback() {
           }
 
           addNotification("success", "Successfully logged in!");
-          navigate("/", { replace: true }); // Ensure redirection to root
+          navigate("/", { replace: true }); 
         } else {
           setAuthError("Invalid response from server. Authentication failed.");
           addNotification(
@@ -48,7 +48,6 @@ export default function Callback() {
       } catch (error) {
         console.error("Authentication error:", error);
 
-        // Extract the error message
         let errorMessage = "Authentication failed. Please try again.";
         if (error && typeof error === "object" && "response" in error) {
           const response = (

@@ -5,23 +5,14 @@ import axios, {
 } from "axios";
 import useAuthStore from "../stores/useAuthStore";
 
-/**
- * Base URL for API requests
- * In a production environment, this would be read from environment variables
- */
 const API_BASE_URL = "http://localhost:5001";
 
-/**
- * Axios instance with base configuration
- */
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Request interceptor to add auth token and headers to requests
 axiosInstance.interceptors.request.use(
   (request: InternalAxiosRequestConfig) => {
-    // Only set the Authorization header for endpoints that aren't public auth endpoints
     const { token } = useAuthStore.getState();
     const isAuthEndpoint =
       request.url?.includes("/api/auth/github/login") ||
@@ -38,13 +29,11 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor for centralized error handling
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
   (err: unknown) => {
-    // Better error handling
     if (err && typeof err === "object" && "response" in err) {
       const response = (
         err as {
@@ -57,14 +46,11 @@ axiosInstance.interceptors.response.use(
         }
       ).response;
 
-      // Safe access to response properties
       const status = response?.status;
 
-      // Handle token expiration or unauthorized access
       if (status === 401) {
         console.error("Unauthorized access. Token may be expired.");
 
-        // Check if this is a GitHub token expiration
         const responseData = response.data as {
           reauthorize?: boolean;
           authUrl?: string;
@@ -72,7 +58,6 @@ axiosInstance.interceptors.response.use(
         };
         if (responseData?.reauthorize && responseData?.authUrl) {
           console.info("GitHub token expired. Redirecting to reauthorize.");
-          // Log out but then redirect to the GitHub auth URL
           useAuthStore.getState().logout();
           window.location.href = responseData.authUrl;
           return Promise.reject(
@@ -82,14 +67,12 @@ axiosInstance.interceptors.response.use(
           );
         }
 
-        // Regular JWT token expiration - only log out if we're not already on the login or callback page
         const currentPath = window.location.pathname;
         if (
           !currentPath.includes("/login") &&
           !currentPath.includes("/callback")
         ) {
           console.info("Redirecting to login due to authentication issue");
-          // Log out using the store directly
           useAuthStore.getState().logout();
           window.location.href = "/login";
           return Promise.reject(
@@ -98,7 +81,6 @@ axiosInstance.interceptors.response.use(
         }
       } else if (status === 403) {
         console.error("Access forbidden:", response);
-        // GitHub API rate limit might be exceeded
         const responseData = response.data as {
           message?: string;
           documentation_url?: string;
@@ -144,10 +126,6 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-/**
- * Generic API client for making type-safe HTTP requests
- * T represents the expected response data type
- */
 class APIClient<T> {
   endpoint: string;
 
@@ -155,86 +133,8 @@ class APIClient<T> {
     this.endpoint = endpoint;
   }
 
-  /**
-   * Make a GET request to retrieve data
-   * @param config Optional Axios request configuration
-   * @returns Promise with response data
-   */
   get = (config?: AxiosRequestConfig): Promise<T> => {
     return axiosInstance.get<T>(this.endpoint, config).then((res) => res.data);
-  };
-
-  /**
-   * Get a resource by ID appended as a query param
-   * @param id Resource identifier
-   * @returns Promise with response data
-   */
-  getById = (id?: string): Promise<T> => {
-    return axiosInstance
-      .get<T>(this.endpoint + "?" + id)
-      .then((res) => res.data);
-  };
-
-  /**
-   * Get a resource by ID appended as path param
-   * @param payload Resource identifier
-   * @returns Promise with response data
-   */
-  getByIdParams = (payload: string | number): Promise<T> => {
-    return axiosInstance
-      .get<T>(`${this.endpoint}/${payload}`)
-      .then((res) => res.data);
-  };
-
-  /**
-   * Get multiple resources
-   * @param config Optional Axios request configuration
-   * @returns Promise with array of response data
-   */
-  getAll = (config?: AxiosRequestConfig): Promise<T[]> => {
-    return axiosInstance
-      .get<T[]>(this.endpoint, config)
-      .then((res) => res.data);
-  };
-
-  /**
-   * Create a new resource
-   * @param payload Data to be sent in the request body
-   * @param config Optional Axios request configuration
-   * @returns Promise with response data
-   */
-  post = <U = Record<string, unknown>>(
-    payload?: U,
-    config?: AxiosRequestConfig
-  ): Promise<T> => {
-    return axiosInstance
-      .post<T>(this.endpoint, payload, config)
-      .then((res) => res.data);
-  };
-
-  /**
-   * Update an existing resource
-   * @param payload Object containing ID and data to update
-   * @returns Promise with response data
-   */
-  patch = (payload: {
-    id: number | string;
-    data: Record<string, unknown>;
-  }): Promise<T> => {
-    return axiosInstance
-      .patch<T>(`${this.endpoint}/${payload.id}`, payload.data)
-      .then((res) => res.data);
-  };
-
-  /**
-   * Delete a resource
-   * @param payload Resource identifier
-   * @returns Promise with response data
-   */
-  delete = (payload: string | number): Promise<unknown> => {
-    return axiosInstance
-      .delete(`${this.endpoint}/${payload}`)
-      .then((res) => res.data);
   };
 }
 

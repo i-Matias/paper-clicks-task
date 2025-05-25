@@ -14,7 +14,6 @@ import {
 import { Line, Bar } from "react-chartjs-2";
 import "./styles.css";
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -26,36 +25,23 @@ ChartJS.register(
   Legend
 );
 
-/**
- * Interface for commit count data point
- */
 interface CommitCount {
   id: string;
   count: number;
   date: string;
 }
 
-/**
- * Props for the CommitChart component
- */
 interface CommitChartProps {
-  /** Array of commit counts to display */
   commitCounts: CommitCount[];
-  /** Name of the repository */
   repositoryName: string;
-  /** Type of chart to display */
   chartType?: "line" | "bar";
 }
 
-/**
- * A component that displays commit activity data in chart form
- */
 const CommitChart: React.FC<CommitChartProps> = ({
   commitCounts,
   repositoryName,
   chartType = "line",
 }) => {
-  // Early return if no data is available
   if (!commitCounts.length) {
     return (
       <div className="empty-chart">
@@ -64,24 +50,20 @@ const CommitChart: React.FC<CommitChartProps> = ({
     );
   }
 
-  // Sort commit counts by date
   const sortedCounts = [...commitCounts].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  // Limit the number of data points to improve readability
   const maxDataPoints = 20;
   const limitedCounts =
     sortedCounts.length > maxDataPoints
       ? sortedCounts.slice(sortedCounts.length - maxDataPoints)
       : sortedCounts;
 
-  // Prepare data for chart - format dates for display
   const labels = limitedCounts.map((count) =>
     new Date(count.date).toLocaleDateString()
   );
 
-  // Configure chart data
   const chartData = {
     labels,
     datasets: [
@@ -95,7 +77,6 @@ const CommitChart: React.FC<CommitChartProps> = ({
     ],
   };
 
-  // Configure chart options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -144,7 +125,6 @@ const CommitChart: React.FC<CommitChartProps> = ({
     },
   };
 
-  // Render the appropriate chart type
   return (
     <div className="chart-container">
       {chartType === "line" ? (

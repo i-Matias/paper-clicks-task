@@ -3,19 +3,13 @@ import { toast, ToastContainer as ReactToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useNotificationStore from "../../stores/useNotificationStore";
 
-/**
- * ToastContainer component that displays notifications using react-toastify
- * It automatically handles different notification types and displays them appropriately
- */
 const ToastContainer = () => {
   const { notifications, removeNotification } = useNotificationStore();
 
   useEffect(() => {
-    // Process each notification and create corresponding toast
     notifications.forEach((notification) => {
       const { id, type, message } = notification;
 
-      // Create toast with appropriate type
       const toastOptions = {
         position: "top-right" as const,
         autoClose: type === "error" ? false : 5000,
@@ -26,7 +20,6 @@ const ToastContainer = () => {
         onClose: () => removeNotification(id),
       } as const;
 
-      // Use the appropriate toast type
       switch (type) {
         case "success":
           toast.success(message, toastOptions);
@@ -42,7 +35,6 @@ const ToastContainer = () => {
           break;
       }
 
-      // Remove the notification after displaying it
       removeNotification(id);
     });
   }, [notifications, removeNotification]);
