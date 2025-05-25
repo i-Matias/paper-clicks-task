@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import app from "./app";
 import prisma from "./lib/prisma";
+import BackgroundService from "./services/background.service";
 
 dotenv.config({ override: true });
 
@@ -8,6 +9,9 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  // Start background jobs for fetching commit counts
+  BackgroundService.startBackgroundJobs();
 });
 
 const shutdown = async () => {

@@ -1,4 +1,4 @@
-import APIClient from "../react-query/apiClient";
+import APIClient from "./apiClient";
 
 interface GithubLoginResponse {
   url: string;
@@ -10,12 +10,16 @@ interface GithubCallbackResponse {
     accessToken: string;
     expiresIn: number;
   };
+  githubToken: string;
 }
 
 export interface User {
   id: string;
   username: string;
   email: string;
+  avatarUrl: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 class AuthService {
@@ -42,11 +46,25 @@ class AuthService {
       return response;
     } catch (error) {
       console.error("Error handling callback:", error);
-      throw new Error(`Failed to handle callback. Error: ${error}`);
+
+      // Provide more descriptive error messages
+      if (error instanceof Error) {
+        if (error.message.includes("invalid_grant")) {
+          throw new Error(
+            "GitHub authorization code has expired or is invalid. Please try logging in again."
+          );
+        } else if (error.message.includes("bad_verification_code")) {
+          throw new Error(
+            "GitHub returned an invalid verification code. Please try logging in again."
+          );
+        }
+      }
+
+      throw new Error("Failed to authenticate with GitHub. Please try again.");
     }
   };
 
-  getCurrentUser = async () => {
+  getCurrentUser = async (): Promise<User> => {
     try {
       const response = await this.profileClient.get();
       if (response && response.user) {
@@ -55,7 +73,20 @@ class AuthService {
       throw new Error("No user data returned from server");
     } catch (error) {
       console.error("Error fetching current user:", error);
-      throw new Error(`Failed to fetch current user. Error: ${error}`);
+
+      // Provide more descriptive error messages
+      if (error instanceof Error) {
+        if (
+          error.message.includes("session has expired") ||
+          error.message.includes("Unauthorized")
+        ) {
+          throw new Error("Your session has expired. Please log in again.");
+        }
+      }
+
+      throw new Error(
+        "Failed to fetch your profile information. Please try logging in again."
+      );
     }
   };
 }

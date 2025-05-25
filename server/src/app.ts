@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
+import repositoryRoutes from "./routes/repository.routes";
 import { validateConfig } from "./config/auth.config";
 import { errorHandler } from "./middleware/error.middleware";
 
@@ -30,6 +31,7 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
+app.use("/api/repositories", repositoryRoutes);
 
 app.use(errorHandler);
 

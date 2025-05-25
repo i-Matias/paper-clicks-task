@@ -7,7 +7,7 @@ import "./style.css";
 export default function Callback() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { setToken, setUser } = useAuthStore();
+  const { setToken, setUser, setGithubToken } = useAuthStore();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -24,6 +24,9 @@ export default function Callback() {
 
         if (data.tokens && data.tokens.accessToken) {
           setToken(data.tokens.accessToken, data.tokens.expiresIn);
+          if (data.githubToken) {
+            setGithubToken(data.githubToken);
+          }
           if (data.user) {
             setUser(data.user);
           }

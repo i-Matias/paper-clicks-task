@@ -35,14 +35,42 @@ axiosInstance.interceptors.response.use(
     // Better error handling
     if (err && typeof err === "object" && "response" in err) {
       const response = (
-        err as { response: { status?: number; data?: unknown } }
+        err as {
+          response: {
+            status?: number;
+            data?: unknown;
+            statusText?: string;
+          };
+          message?: string;
+        }
       ).response;
 
+      // Safe access to response properties
+      const status = response?.status;
+
       // Handle token expiration or unauthorized access
-      if (response?.status === 401) {
+      if (status === 401) {
         console.error("Unauthorized access. Token may be expired.");
 
-        // Only log out if we're not already on the login or callback page
+        // Check if this is a GitHub token expiration
+        const responseData = response.data as {
+          reauthorize?: boolean;
+          authUrl?: string;
+          error?: string;
+        };
+        if (responseData?.reauthorize && responseData?.authUrl) {
+          console.info("GitHub token expired. Redirecting to reauthorize.");
+          // Log out but then redirect to the GitHub auth URL
+          useAuthStore.getState().logout();
+          window.location.href = responseData.authUrl;
+          return Promise.reject(
+            new Error(
+              "GitHub token expired. Redirecting to reauthorize GitHub access."
+            )
+          );
+        }
+
+        // Regular JWT token expiration - only log out if we're not already on the login or callback page
         const currentPath = window.location.pathname;
         if (
           !currentPath.includes("/login") &&
@@ -52,14 +80,55 @@ axiosInstance.interceptors.response.use(
           // Log out using the store directly
           useAuthStore.getState().logout();
           window.location.href = "/login";
+          return Promise.reject(
+            new Error("Your session has expired. Please log in again.")
+          );
         }
+      } else if (status === 403) {
+        console.error("Access forbidden:", response);
+        // GitHub API rate limit might be exceeded
+        const responseData = response.data as {
+          message?: string;
+          documentation_url?: string;
+        };
+
+        if (responseData?.message?.includes("API rate limit exceeded")) {
+          return Promise.reject(
+            new Error("GitHub API rate limit exceeded. Please try again later.")
+          );
+        }
+
+        return Promise.reject(
+          new Error(responseData?.message || "Access forbidden")
+        );
+      } else if (status === 404) {
+        console.error("Resource not found:", response);
+        return Promise.reject(
+          new Error("The requested resource could not be found")
+        );
+      } else if (status && status >= 500) {
+        console.error("Server error:", response);
+        return Promise.reject(
+          new Error("A server error occurred. Please try again later.")
+        );
       } else {
         console.error("API Error Response:", response);
+        const responseData = response.data as {
+          error?: string;
+          message?: string;
+        };
+        const errorMessage =
+          responseData?.error ||
+          responseData?.message ||
+          response?.statusText ||
+          "An error occurred";
+        return Promise.reject(new Error(errorMessage));
       }
     } else {
       console.error("API Request Error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Network error";
+      return Promise.reject(new Error(`Request failed: ${errorMessage}`));
     }
-    return Promise.reject(err);
   }
 );
 
@@ -95,9 +164,12 @@ class APIClient<T> {
   };
 
   /** post */
-  post = <U = Record<string, unknown>>(payload?: U) => {
+  post = <U = Record<string, unknown>>(
+    payload?: U,
+    config?: AxiosRequestConfig
+  ) => {
     return axiosInstance
-      .post<T>(this.endpoint, payload)
+      .post<T>(this.endpoint, payload, config)
       .then((res) => res.data);
   };
 

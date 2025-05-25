@@ -1,0 +1,554 @@
+.repositories-container {
+    margin-top: 2rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.repositories-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.repositories-header h2 {
+    margin: 0;
+    flex: 1;
+    color: #24292e;
+}
+
+.sync-button {
+    background-color: #2ea44f;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sync-button:hover {
+    background-color: #2c974b;
+}
+
+.sync-button:disabled {
+    background-color: #94d3a2;
+    cursor: not-allowed;
+}
+
+.sync-message {
+    background-color: #f1f8ff;
+    border: 1px solid #c8e1ff;
+    color: #0366d6;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    width: 100%;
+    text-align: center;
+}
+
+.repositories-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #586069;
+}
+
+.no-repositories {
+    text-align: center;
+    padding: 2rem;
+    color: #586069;
+    background-color: #f6f8fa;
+    border-radius: 6px;
+}
+
+.repositories-simple-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.repository-list-item {
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 1rem;
+    background-color: #f6f8fa;
+}
+
+.repository-list-item a {
+    color: #0366d6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.repository-list-item a:hover {
+    text-decoration: underline;
+}
+
+.repository-description {
+    color: #586069;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+}
+
+.commit-visualization-section {
+    border-top: 1px solid #e1e4e8;
+    padding-top: 1.5rem;
+    margin-top: 1rem;
+}
+
+.commit-visualization-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #24292e;
+}
+
+.repository-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.select-wrapper {
+    position: relative;
+    min-width: 300px;
+    z-index: 1;
+}
+
+.select-wrapper:focus-within {
+    z-index: 2;
+}
+
+.modern-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #d0d7de;
+    background-color: #f6f8fa;
+    font-size: 1rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 0.85em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    color: #24292e;
+}
+
+.modern-select[data-has-content="true"] {
+    background-color: #fff;
+    font-weight: 500;
+    color: #0969da;
+    border-color: #0969da;
+    box-shadow: 0 1px 2px rgba(9, 105, 218, 0.1);
+}
+
+.repository-selector select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #d0d7de;
+    background-color: #f6f8fa;
+    font-size: 1rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 0.85em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.repository-selector select:hover,
+.modern-select:hover {
+    border-color: #0969da;
+    box-shadow: 0 2px 8px rgba(9, 105, 218, 0.1);
+}
+
+.repository-selector select:focus,
+.modern-select:focus {
+    border-color: #0969da;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.2);
+    background-color: white;
+    transform: translateY(-1px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Style for select options (works in some modern browsers) */
+.modern-select option {
+    padding: 12px 15px;
+    background-color: white;
+    color: #24292e;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    line-height: 1.5;
+}
+
+/* Firefox specific styles */
+@-moz-document url-prefix() {
+    .modern-select {
+        border: 1px solid #d0d7de;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+    }
+
+    .modern-select option {
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+}
+
+/* Webkit browsers (Chrome, Safari) */
+.modern-select option:hover,
+.modern-select option:focus {
+    background-color: #f6f8fa;
+    color: #0366d6;
+}
+
+.modern-select option:checked {
+    background-color: #f1f8ff;
+    color: #0366d6;
+    font-weight: 500;
+    box-shadow: 0 0 0 1px #0366d6;
+}
+
+.modern-select option:first-of-type {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    font-style: italic;
+    color: #57606a;
+}
+
+/* Selected state */
+.modern-select option:checked::before {
+    content: '✓ ';
+    color: #0366d6;
+}
+
+/* Enhanced dropdown options */
+.modern-select option {
+    transition: background-color 0.15s ease;
+    position: relative;
+    padding: 12px 15px 12px 30px;
+}
+
+.modern-select option:hover {
+    background-color: #f0f6fc;
+}
+
+/* Custom styling for placeholder option */
+.modern-select option[value=""] {
+    font-style: italic;
+    color: #57606a;
+    background-color: #f6f8fa;
+}
+
+/* Custom hover effect for the select wrapper */
+.select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.repository-selector label {
+    font-weight: 500;
+    color: #24292e;
+    margin-right: 0.5rem;
+}
+
+.commit-chart-container {
+    background-color: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 1.5rem;
+    min-height: 300px;
+}
+
+.no-commits,
+.no-repo-selected {
+    color: #6a737d;
+    font-style: italic;
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.commit-counts {
+    margin-top: auto;
+    border-top: 1px solid #e1e4e8;
+    padding-top: 1rem;
+}
+
+.commit-counts h4 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    color: #24292e;
+}
+
+.commit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.commit-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px dotted #e1e4e8;
+}
+
+.commit-item:last-child {
+    border-bottom: none;
+}
+
+.commit-date {
+    color: #586069;
+}
+
+.commit-count {
+    font-weight: 600;
+    color: #24292e;
+}
+
+.no-commits {
+    color: #6a737d;
+    font-style: italic;
+    text-align: center;
+}
+
+.commit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.commit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.chart-toggle {
+    display: flex;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.chart-toggle button {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chart-toggle button:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+}
+
+.chart-toggle button:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.chart-toggle button.active {
+    background-color: #0969da;
+    color: #ffffff;
+    border-color: #0969da;
+}
+
+.toggle-chart-btn {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toggle-chart-btn:hover,
+.chart-toggle button:hover {
+    background-color: #eaeef2;
+}
+
+.commit-chart {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e1e4e8;
+}
+
+.chart-title {
+    font-size: 1rem;
+    color: #24292e;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    text-align: center;
+}
+
+/* Media query for responsive design */
+@media (max-width: 600px) {
+    .commit-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .commit-actions {
+        margin-top: 0.5rem;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .repositories-list {
+        grid-template-columns: 1fr;
+    }
+
+    .repository-selector {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .select-wrapper,
+    .modern-select {
+        width: 100%;
+    }
+
+    .repository-selector label {
+        margin-bottom: 0.5rem;
+    }
+
+    .chart-toggle {
+        margin-top: 1rem;
+    }
+}
+
+/* Custom animation for dropdown (works in some browsers) */
+.modern-select {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Visual indicator for dropdown state */
+.select-wrapper::before {
+    content: '';
+    position: absolute;
+    right: 2.5rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: transparent;
+    transform: translateY(-50%);
+    transition: all 0.2s ease;
+}
+
+.select-wrapper:focus-within::before {
+    background-color: #0366d6;
+}
+
+/* Webkit browsers - enhance the dropdown look */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    .select-wrapper select {
+        padding-right: 2.5rem;
+    }
+
+    /* Target the dropdown arrow in Chrome/Safari */
+    .select-wrapper select::-ms-expand {
+        display: none;
+    }
+}
+
+/* Custom scrollbar for the dropdown (Chrome, Edge, Safari) */
+.modern-select option::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modern-select option::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.modern-select option::-webkit-scrollbar-thumb {
+    background: #c4c9cc;
+    border-radius: 4px;
+}
+
+.modern-select option::-webkit-scrollbar-thumb:hover {
+    background: #a0a5a9;
+}
+
+/* Enhanced dropdown appearance */
+.modern-select:focus+.select-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Enhanced dropdown animation */
+.select-wrapper {
+    position: relative;
+}
+
+/* Dropdown animation */
+.select-wrapper select {
+    animation: selectFadeIn 0.2s ease;
+}
+
+@keyframes selectFadeIn {
+    0% {
+        opacity: 0.8;
+        transform: translateY(-2px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Improved focus and hover states */
+.modern-select:focus {
+    border-color: #0969da;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+    outline: none;
+}
+
+/* Option group styling (if you use them in the future) */
+.modern-select optgroup {
+    font-weight: 600;
+    color: #24292e;
+    background-color: #f6f8fa;
+    padding: 8px 12px;
+}
+
+/* Active dropdown indicator */
+.select-wrapper.active::after {
+    transform: translateY(-50%) rotate(180deg);
+}

@@ -13,28 +13,57 @@ const githubCallback = catchAsync(async (req: Request, res: Response) => {
     return;
   }
 
-  const accessToken = await GithubService.getAccessToken(code);
+  try {
+    const accessToken = await GithubService.getAccessToken(code);
 
-  const githubUser = await GithubService.getUserData(accessToken);
+    const githubUser = await GithubService.getUserData(accessToken);
 
-  const user = await UserService.upsertUser(githubUser);
+    const user = await UserService.upsertUser(githubUser);
 
-  const tokens = generateToken({
-    id: user.id,
-    email: user.email,
-  });
+    await UserService.storeUserToken(user.id, accessToken);
 
-  res.status(200).json({
-    user: {
+    const tokens = generateToken({
       id: user.id,
-      username: user.username,
       email: user.email,
-      avatarUrl: user.avatarUrl,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    },
-    tokens,
-  });
+    });
+
+    // Trigger repository sync in the background for this user
+    // We don't want to block the login process, so we don't await this
+    import("../services/repository.service")
+      .then(({ default: RepositoryService }) => {
+        // First save starred repos (handles adds/removals)
+        RepositoryService.saveStarredRepositories(user.id, accessToken)
+          .then(() => {
+            // Then sync commit counts
+            return RepositoryService.updateCommitCounts(accessToken, user.id);
+          })
+          .catch((error) => {
+            console.error(`Error syncing data for user ${user.id}:`, error);
+          });
+      })
+      .catch((error) => {
+        console.error("Error importing repository service:", error);
+      });
+
+    res.status(200).json({
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      tokens,
+      githubToken: accessToken,
+    });
+  } catch (error: any) {
+    console.error("Error in GitHub callback:", error);
+    res.status(500).json({
+      error: "Authentication failed",
+      details: error.message || "Unknown error during authentication",
+    });
+  }
 });
 
 const getLoginUrl = catchAsync(async (_req: Request, res: Response) => {

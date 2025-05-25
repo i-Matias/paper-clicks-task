@@ -9,11 +9,47 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  githubId  String    @unique
-  username  String
-  email     String    @unique
-  avatarUrl String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
+  id                  String              @id @default(uuid())
+  githubId            String              @unique
+  username            String
+  email               String              @unique
+  avatarUrl           String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime?
+  starredRepositories StarredRepository[]
+  tokens              Token[]
+}
+
+model StarredRepository {
+  id           String        @id @default(uuid())
+  repoId       String        @unique
+  name         String
+  fullName     String
+  description  String?
+  url          String
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime?
+  commitCounts CommitCount[]
+}
+
+model CommitCount {
+  id           String            @id @default(uuid())
+  count        Int
+  date         DateTime
+  repositoryId String
+  repository   StarredRepository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  createdAt    DateTime          @default(now())
+}
+
+model Token {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

@@ -1,17 +1,13 @@
 import { useEffect, useState } from "react";
 import useAuthStore from "../../stores/useAuthStore";
-import authService from "../../services/auth.service";
+import authService, { type User } from "../../services/auth.service";
 import "./style.css";
-
-interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-}
+import Profile from "../../components/profile";
+import StarredRepositories from "../../components/starred-repositories";
 
 export default function Home() {
   const { user: storedUser, logout } = useAuthStore();
-  const [user, setUser] = useState<UserProfile | null>(storedUser);
+  const [user, setUser] = useState<User | null>(storedUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,27 +56,29 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      <h1>Welcome, {user?.username || "User"}!</h1>
-      <p>You are successfully authenticated</p>
+      <div className="header-container">
+        <h1>User Profile</h1>
+        <button className="logout-button" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
 
       {user && (
-        <div className="user-info">
-          <h2>Your Profile</h2>
-          <p>
-            <strong>ID:</strong> {user.id}
-          </p>
-          <p>
-            <strong>Username:</strong> {user.username}
-          </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
-        </div>
-      )}
+        <>
+          <Profile
+            id={user.id}
+            username={user.username}
+            email={user.email}
+            avatarUrl={user.avatarUrl}
+            createdAt={user.createdAt}
+            updatedAt={user.updatedAt}
+          />
 
-      <button className="logout-button" onClick={handleLogout}>
-        Logout
-      </button>
+          <div className="repositories-section">
+            <StarredRepositories onError={(errorMsg) => setError(errorMsg)} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

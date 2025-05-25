@@ -2,49 +2,143 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    padding: 20px;
-    text-align: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    background-color: #ffffff;
+    color: #333333;
+    box-sizing: border-box;
+    position: relative;
+    overflow-x: hidden;
 }
 
-.home-container h1 {
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2.5rem;
+    padding: 0 10px;
+}
+
+.header-container h1 {
     font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-.home-container p {
-    font-size: 1.2rem;
-    color: #666;
-    margin-bottom: 2rem;
+    color: #333333;
+    margin: 0;
+    font-weight: 400;
+    letter-spacing: 0.5px;
 }
 
 .logout-button {
     background-color: #f44336;
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 12px 24px;
+    border-radius: 6px;
+    padding: 10px 20px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background-color 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .logout-button:hover {
     background-color: #d32f2f;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
-.user-info {
-    background-color: #f5f5f5;
+.logout-button:active {
+    transform: translateY(0);
+}
+
+.profile-card {
+    background-color: #fff;
     border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    max-width: 500px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    /* Ensures no content spills out of the card */
 }
 
-.user-info p {
-    margin: 8px 0;
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #f3f3f3;
+    object-fit: cover;
+}
+
+.profile-details {
+    margin-left: 20px;
+}
+
+.profile-details h2 {
+    font-size: 1.8rem;
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.profile-email {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
+}
+
+.repositories-section {
+    width: 100%;
+    margin-top: 2rem;
+}
+
+.profile-dates {
+    text-align: right;
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.profile-dates p {
+    margin: 5px 0;
+}
+
+.profile-dates span {
+    font-weight: bold;
+    color: #555;
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .header-container h1 {
+        margin-bottom: 10px;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profile-dates {
+        text-align: left;
+        margin-top: 15px;
+        width: 100%;
+    }
 }

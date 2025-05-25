@@ -1,0 +1,78 @@
+.error-message {
+    padding: 12px 16px;
+    margin: 10px 0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.error-message.error {
+    background-color: #fee2e2;
+    border: 1px solid #ef4444;
+    color: #b91c1c;
+}
+
+.error-message.warning {
+    background-color: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+}
+
+.error-message.info {
+    background-color: #e0f2fe;
+    border: 1px solid #3b82f6;
+    color: #1e40af;
+}
+
+.error-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.error-icon {
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+.error-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.dismiss-button {
+    background: none;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 3px;
+    margin-left: 10px;
+}
+
+.error-message.error .dismiss-button:hover {
+    background-color: #fecaca;
+}
+
+.error-message.warning .dismiss-button:hover {
+    background-color: #fde68a;
+}
+
+.error-message.info .dismiss-button:hover {
+    background-color: #bfdbfe;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
