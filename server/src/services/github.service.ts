@@ -27,12 +27,6 @@ const getAccessToken = async (code: string): Promise<string> => {
   }
 };
 
-/**
- * Gets an access token and stores it for a user
- * @param code The GitHub OAuth code
- * @param userId The user ID to associate with the token
- * @returns The access token
- */
 const getAndStoreAccessToken = async (
   code: string,
   userId: string
@@ -64,17 +58,13 @@ const getAndStoreAccessToken = async (
       throw new Error("GitHub did not provide an access token");
     }
 
-    // GitHub's standard OAuth tokens don't expire by default
-    // If you're using GitHub Apps or have configured expiration, adjust the expiresIn value
-    const expiresIn = 8 * 60 * 60; // Default to 8 hours
+    const expiresIn = 8 * 60 * 60;
 
     try {
-      // Store the token
       await TokenService.saveToken(userId, accessToken, expiresIn);
     } catch (error: any) {
       console.error("Error storing GitHub access token:", error);
 
-      // Check if this is an encryption error
       if (
         error.message &&
         (error.message.includes("crypto") ||
@@ -149,9 +139,8 @@ const getStarredRepositories = async (accessToken: string): Promise<any[]> => {
     let allRepositories: any[] = [];
     let page = 1;
     let hasMorePages = true;
-    const perPage = 100; // GitHub's max per page is 100
+    const perPage = 100;
 
-    // Fetch all pages of starred repositories
     while (hasMorePages) {
       const response = await githubApiRequest(
         "https://api.github.com/user/starred",
@@ -166,20 +155,16 @@ const getStarredRepositories = async (accessToken: string): Promise<any[]> => {
         }
       );
 
-      // If no results or not an array, break the loop
       if (!response || !Array.isArray(response) || response.length === 0) {
         hasMorePages = false;
         break;
       }
 
-      // Add the repositories from this page to our collection
       allRepositories = [...allRepositories, ...response];
 
-      // If we got fewer repositories than the maximum per page, we've reached the last page
       if (response.length < perPage) {
         hasMorePages = false;
       } else {
-        // Otherwise, go to the next page
         page++;
       }
     }

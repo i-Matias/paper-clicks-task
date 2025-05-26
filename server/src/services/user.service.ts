@@ -47,18 +47,11 @@ const findByGithubId = async (githubId: string) => {
   });
 };
 
-/**
- * Stores a GitHub access token for a user
- * @param userId The user's ID
- * @param accessToken The GitHub access token
- */
 const storeUserToken = async (userId: string, accessToken: string) => {
   if (!accessToken) {
     throw new Error("Access token is required");
   }
 
-  // GitHub's standard OAuth tokens don't expire by default
-  // Setting a default expiration of 8 hours
   const expiresIn = 8 * 60 * 60;
 
   return TokenService.saveToken(userId, accessToken, expiresIn);

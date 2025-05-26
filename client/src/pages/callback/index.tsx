@@ -8,7 +8,7 @@ import useNotificationStore from "../../stores/useNotificationStore";
 export default function Callback() {
   const [authError, setAuthError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { setToken, setUser, setGithubToken } = useAuthStore();
+  const { setToken, setUser } = useAuthStore();
   const { addNotification } = useNotificationStore();
 
   useEffect(() => {
@@ -27,10 +27,6 @@ export default function Callback() {
 
         if (data.tokens && data.tokens.accessToken) {
           setToken(data.tokens.accessToken, data.tokens.expiresIn);
-
-          if (data.githubToken) {
-            setGithubToken(data.githubToken);
-          }
 
           if (data.user) {
             setUser(data.user);
@@ -66,7 +62,7 @@ export default function Callback() {
     };
 
     handleCallback();
-  }, [navigate, setToken, setUser, setGithubToken, addNotification]);
+  }, [navigate, setToken, setUser, addNotification]);
 
   if (authError) {
     return (

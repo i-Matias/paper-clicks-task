@@ -44,11 +44,13 @@ export const useAutoLogin = (): UseAutoLoginResult => {
           if (userData) {
             setUser(userData);
           } else {
+            logout();
             handleAuthFailure("Your session has expired. Please log in again.");
           }
         } catch (error) {
           console.error("Auto-login failed:", error);
           handleAuthFailure("Authentication failed. Please log in again.");
+          logout();
         } finally {
           setIsLoading(false);
         }
@@ -60,7 +62,15 @@ export const useAutoLogin = (): UseAutoLoginResult => {
         "info"
       );
     }
-  }, [token, user, setUser, isTokenValid, isPublicPage, handleAuthFailure]);
+  }, [
+    token,
+    user,
+    setUser,
+    isTokenValid,
+    isPublicPage,
+    handleAuthFailure,
+    logout,
+  ]);
 
   useEffect(() => {
     checkAuth();

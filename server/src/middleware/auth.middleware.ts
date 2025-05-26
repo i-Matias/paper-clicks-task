@@ -14,7 +14,7 @@ export const authenticate = (
       return;
     }
 
-    const token = authHeader.split(" ")[1]; // Extract token from 'Bearer <token>'
+    const token = authHeader.split(" ")[1];
 
     if (!token) {
       res.status(401).json({ error: "Invalid token format" });
@@ -28,7 +28,6 @@ export const authenticate = (
       return;
     }
 
-    // Attach user to request object for use in protected routes
     req.user = {
       id: userPayload.id,
       email: userPayload.email,

@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
 import GithubService from "./github.service";
+import axios from "axios";
 
 interface RepoData {
   id: number;
@@ -12,28 +13,23 @@ interface RepoData {
 
 const saveStarredRepositories = async (userId: string, accessToken: string) => {
   return withPrisma(async () => {
-    // Get current starred repositories from GitHub
     const starredRepos = await GithubService.getStarredRepositories(
       accessToken
     );
 
-    // Create a set of repo IDs from the GitHub API response for easier lookup
     const currentStarredRepoIds = new Set(
       starredRepos.map((repo) => repo.id.toString())
     );
 
-    // Get all repos currently in the database for this user
     const existingRepos = await prisma.starredRepository.findMany({
       where: { userId },
       select: { id: true, repoId: true },
     });
 
-    // Find repos to remove (those in the database but no longer starred)
     const reposToRemove = existingRepos.filter(
       (repo) => !currentStarredRepoIds.has(repo.repoId)
     );
 
-    // Delete repositories that are no longer starred
     if (reposToRemove.length > 0) {
       console.log(
         `Removing ${reposToRemove.length} un-starred repositories for user ${userId}`
@@ -49,7 +45,6 @@ const saveStarredRepositories = async (userId: string, accessToken: string) => {
 
     const savedRepos = [];
 
-    // Update or create currently starred repositories
     for (const repo of starredRepos) {
       const repoData: RepoData = repo;
 
@@ -98,9 +93,8 @@ const getStarredRepositories = async (userId: string) => {
   });
 };
 
-// Define interface for date-based commit count
 interface DailyCommitCount {
-  date: string; // ISO format date string (YYYY-MM-DD)
+  date: string;
   count: number;
 }
 
@@ -113,22 +107,19 @@ const fetchCommitsByDate = async (
   try {
     const axios = require("axios");
 
-    // We'll use axios directly for GitHub API calls to ensure we get proper headers
     const commitsUrl = `https://api.github.com/repos/${repoFullName}/commits`;
 
-    // Calculate default date range if not provided (last 6 months)
     const endDate = until ? new Date(until) : new Date();
     const startDate = since
       ? new Date(since)
-      : new Date(endDate.getTime() - 180 * 24 * 60 * 60 * 1000); // 180 days (6 months) before end date
+      : new Date(endDate.getTime() - 180 * 24 * 60 * 60 * 1000);
 
     console.log(
       `Fetching commits for ${repoFullName} from ${startDate.toISOString()} to ${endDate.toISOString()}`
     );
 
-    // GitHub API parameters
     const params: Record<string, string> = {
-      per_page: "100", // GitHub's max per page
+      per_page: "100",
       since: startDate.toISOString(),
       until: endDate.toISOString(),
     };
@@ -137,7 +128,6 @@ const fetchCommitsByDate = async (
     let page = 1;
     let hasMorePages = true;
 
-    // Fetch all pages of commits in the date range
     while (hasMorePages) {
       try {
         const response = await axios(commitsUrl, {
@@ -164,7 +154,6 @@ const fetchCommitsByDate = async (
           break;
         }
 
-        // Process commits and group by date
         for (const commit of response.data) {
           if (commit?.commit?.author?.date) {
             const commitDate = new Date(commit.commit.author.date);
@@ -176,7 +165,6 @@ const fetchCommitsByDate = async (
           }
         }
 
-        // Check if we need to fetch more pages
         const linkHeader = response.headers?.link;
         if (
           !linkHeader ||
@@ -196,7 +184,6 @@ const fetchCommitsByDate = async (
       }
     }
 
-    // Convert map to array of objects
     const result: DailyCommitCount[] = Array.from(dailyCommits.entries()).map(
       ([date, count]) => ({ date, count })
     );
@@ -207,19 +194,15 @@ const fetchCommitsByDate = async (
     return result;
   } catch (error) {
     console.error(`Error fetching commits by date for ${repoFullName}:`, error);
-    return []; // Return empty array on error
+    return [];
   }
 };
 
-// Keep the old function for backward compatibility but modify to use the new one
 const fetchCommitCount = async (
   accessToken: string,
   repoFullName: string
 ): Promise<number> => {
   try {
-    const axios = require("axios");
-
-    // We'll use axios directly for this call to ensure we get headers properly
     const commitsUrl = `https://api.github.com/repos/${repoFullName}/commits`;
 
     // Make first request with per_page=1 to get headers
@@ -232,17 +215,15 @@ const fetchCommitCount = async (
         per_page: 1,
       },
       validateStatus: (status: number) => {
-        // Accept 404s (repo might have been deleted or renamed)
         return (status >= 200 && status < 300) || status === 404;
       },
     });
 
     if (!response || response.status === 404) {
       console.log(`Repository ${repoFullName} not found or inaccessible`);
-      return 0; // Repository might not exist or be accessible
+      return 0;
     }
 
-    // Check Link header for pagination information
     const linkHeader = response.headers?.link;
 
     if (linkHeader) {
@@ -252,20 +233,18 @@ const fetchCommitCount = async (
         console.log(
           `Repository ${repoFullName} has approximately ${totalPages} commits (from pagination)`
         );
-        return totalPages; // This is our accurate count
+        return totalPages;
       }
     }
 
-    // If Link header approach didn't work, fetch a larger batch to get more accurate count
     try {
-      // Make second request with per_page=100
       const moreCommitsResponse = await axios(commitsUrl, {
         headers: {
           Authorization: `token ${accessToken}`,
           Accept: "application/vnd.github.v3+json",
         },
         params: {
-          per_page: 100, // GitHub's max per page
+          per_page: 100,
         },
         validateStatus: (status: number) => {
           return (status >= 200 && status < 300) || status === 404;
@@ -276,11 +255,8 @@ const fetchCommitCount = async (
         return 0;
       }
 
-      // Check if the response data is an array (commit list)
       if (Array.isArray(moreCommitsResponse.data)) {
-        // If we got a full page, check for Link header to determine total count
         if (moreCommitsResponse.data.length === 100) {
-          // Try to get total from Link header
           const moreLinksHeader = moreCommitsResponse.headers?.link;
 
           if (moreLinksHeader) {
@@ -292,16 +268,14 @@ const fetchCommitCount = async (
                   lastPage * 100
                 } commits (from pagination)`
               );
-              return lastPage * 100; // Approximate count based on max per page
+              return lastPage * 100;
             }
           }
 
-          // If we have a full page but can't determine more pages
           console.log(`Repository ${repoFullName} has at least 100 commits`);
-          return 100; // We know there are at least 100
+          return 100;
         }
 
-        // If we got fewer than max per page, that's our count
         console.log(
           `Repository ${repoFullName} has ${moreCommitsResponse.data.length} commits`
         );
@@ -312,12 +286,9 @@ const fetchCommitCount = async (
         `Error fetching more commits for ${repoFullName}:`,
         innerError
       );
-      // Continue to fallback
     }
 
-    // If both approaches failed but we still have original response data, use it
     if (Array.isArray(response.data)) {
-      // We only requested 1 commit, so if we got it, we know there's at least 1
       const count = response.data.length > 0 ? 1 : 0;
       console.log(
         `Repository ${repoFullName} has at least ${count} commit (fallback)`
@@ -328,7 +299,7 @@ const fetchCommitCount = async (
     return 0;
   } catch (error) {
     console.error(`Error fetching commit count for ${repoFullName}:`, error);
-    return 0; // Return 0 on error to avoid breaking the whole sync process
+    return 0;
   }
 };
 
@@ -337,7 +308,6 @@ const updateDailyCommitCounts = async (
   userId?: string
 ) => {
   return withPrisma(async () => {
-    // If a userId is provided, only update repositories for that user
     const query = userId ? { where: { userId } } : undefined;
     const repositories = await prisma.starredRepository.findMany(query);
 
@@ -368,7 +338,6 @@ const updateDailyCommitCounts = async (
       try {
         console.log(`Fetching daily commit activity for ${repo.fullName}`);
 
-        // Get commits grouped by date for the last 6 months
         const dailyCommits = await fetchCommitsByDate(
           accessToken,
           repo.fullName,
@@ -463,7 +432,6 @@ const updateDailyCommitCounts = async (
   });
 };
 
-// Keep the original function for backward compatibility
 const updateCommitCounts = async (accessToken: string, userId?: string) => {
   console.log(
     "Using updateDailyCommitCounts instead of the old updateCommitCounts"
@@ -471,24 +439,17 @@ const updateCommitCounts = async (accessToken: string, userId?: string) => {
   return updateDailyCommitCounts(accessToken, userId);
 };
 
-/**
- * Fetch starred repositories directly from GitHub and enrich them with commit data
- * This doesn't store repositories in the database but returns them directly
- */
 const getStarredRepositoriesDirectly = async (
   userId: string,
   accessToken: string
 ) => {
   try {
-    // First, fetch starred repositories from GitHub
     const starredRepos = await GithubService.getStarredRepositories(
       accessToken
     );
 
-    // Get existing commit counts to enrich the data
     const commitCountsMap = new Map();
 
-    // Get existing repositories to retrieve commit data
     const existingRepos = await prisma.starredRepository.findMany({
       where: { userId },
       include: {
@@ -500,13 +461,11 @@ const getStarredRepositoriesDirectly = async (
       },
     });
 
-    // Create a map of existing repositories by repoId for quick lookup
     const repoMap = new Map();
     existingRepos.forEach((repo) => {
       repoMap.set(repo.repoId, repo);
     });
 
-    // Transform GitHub API response to our application format
     const enrichedRepos = starredRepos.map((ghRepo) => {
       const repoId = ghRepo.id.toString();
       const existingRepo = repoMap.get(repoId);
