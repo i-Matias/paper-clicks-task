@@ -44,7 +44,18 @@ const useAuthStore = create<AuthState>()(
       isTokenValid: () => {
         const { token, tokenExpiry } = get();
         if (!token || !tokenExpiry) return false;
-        return Date.now() < tokenExpiry;
+
+        const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+        const isValid = Date.now() < tokenExpiry - bufferTime;
+
+        if (
+          Date.now() < tokenExpiry &&
+          Date.now() >= tokenExpiry - bufferTime
+        ) {
+          console.warn("Auth token is about to expire soon");
+        }
+
+        return isValid;
       },
     }),
     {

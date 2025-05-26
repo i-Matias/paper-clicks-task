@@ -4,27 +4,60 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 import useAuthStore from "../stores/useAuthStore";
+import useNotificationStore from "../stores/useNotificationStore";
 
 const API_BASE_URL = "http://localhost:5001";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
+
+const handleAuthRedirect = (message: string, redirectUrl: string): Error => {
+  useNotificationStore.getState().addNotification("info", message);
+
+  useAuthStore.getState().logout();
+
+  window.location.href = redirectUrl;
+
+  return new Error(message);
+};
 
 axiosInstance.interceptors.request.use(
   (request: InternalAxiosRequestConfig) => {
-    const { token } = useAuthStore.getState();
+    const { token, isTokenValid } = useAuthStore.getState();
+
     const isAuthEndpoint =
       request.url?.includes("/api/auth/github/login") ||
       request.url?.includes("/api/auth/github/callback");
 
     if (token && !isAuthEndpoint) {
+      if (!isTokenValid()) {
+        throw handleAuthRedirect(
+          "Your session has expired. Please log in again.",
+          "/login"
+        );
+      }
+
       request.headers.set("Authorization", `Bearer ${token}`);
     }
+
     request.headers.set("Accept", "application/json");
+
     return request;
   },
   (error: unknown) => {
+    console.error("Request interceptor error:", error);
+
+    if (error instanceof Error && !error.message.includes("Session expired")) {
+      useNotificationStore
+        .getState()
+        .addNotification("error", `Request setup failed: ${error.message}`);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -33,7 +66,10 @@ axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
+
   (err: unknown) => {
+    const { addNotification } = useNotificationStore.getState();
+
     if (err && typeof err === "object" && "response" in err) {
       const response = (
         err as {
@@ -56,13 +92,12 @@ axiosInstance.interceptors.response.use(
           authUrl?: string;
           error?: string;
         };
+
         if (responseData?.reauthorize && responseData?.authUrl) {
-          console.info("GitHub token expired. Redirecting to reauthorize.");
-          useAuthStore.getState().logout();
-          window.location.href = responseData.authUrl;
           return Promise.reject(
-            new Error(
-              "GitHub token expired. Redirecting to reauthorize GitHub access."
+            handleAuthRedirect(
+              "GitHub token expired. Redirecting to GitHub login...",
+              responseData.authUrl
             )
           );
         }
@@ -72,11 +107,11 @@ axiosInstance.interceptors.response.use(
           !currentPath.includes("/login") &&
           !currentPath.includes("/callback")
         ) {
-          console.info("Redirecting to login due to authentication issue");
-          useAuthStore.getState().logout();
-          window.location.href = "/login";
           return Promise.reject(
-            new Error("Your session has expired. Please log in again.")
+            handleAuthRedirect(
+              "Your session has expired. Please log in again.",
+              "/login"
+            )
           );
         }
       } else if (status === 403) {
@@ -87,24 +122,25 @@ axiosInstance.interceptors.response.use(
         };
 
         if (responseData?.message?.includes("API rate limit exceeded")) {
-          return Promise.reject(
-            new Error("GitHub API rate limit exceeded. Please try again later.")
-          );
+          const message =
+            "GitHub API rate limit exceeded. Please try again later.";
+          addNotification("warning", message);
+          return Promise.reject(new Error(message));
         }
 
-        return Promise.reject(
-          new Error(responseData?.message || "Access forbidden")
-        );
+        const message = responseData?.message || "Access forbidden";
+        addNotification("error", message);
+        return Promise.reject(new Error(message));
       } else if (status === 404) {
         console.error("Resource not found:", response);
-        return Promise.reject(
-          new Error("The requested resource could not be found")
-        );
+        const message = "The requested resource could not be found";
+        addNotification("error", message);
+        return Promise.reject(new Error(message));
       } else if (status && status >= 500) {
         console.error("Server error:", response);
-        return Promise.reject(
-          new Error("A server error occurred. Please try again later.")
-        );
+        const message = "A server error occurred. Please try again later.";
+        addNotification("error", message);
+        return Promise.reject(new Error(message));
       } else {
         console.error("API Error Response:", response);
         const responseData = response.data as {
@@ -116,15 +152,32 @@ axiosInstance.interceptors.response.use(
           responseData?.message ||
           response?.statusText ||
           "An error occurred";
+
+        addNotification("error", errorMessage);
         return Promise.reject(new Error(errorMessage));
       }
     } else {
       console.error("API Request Error:", err);
       const errorMessage = err instanceof Error ? err.message : "Network error";
-      return Promise.reject(new Error(`Request failed: ${errorMessage}`));
+      const message = `Request failed: ${errorMessage}`;
+
+      // Only show notification for network errors if not related to auth redirects
+      if (
+        !errorMessage.includes("Session expired") &&
+        !errorMessage.includes("Redirecting to reauthorize")
+      ) {
+        addNotification("error", message);
+      }
+
+      return Promise.reject(new Error(message));
     }
   }
 );
+
+interface APIClientOptions {
+  showSuccessNotification?: boolean;
+  successMessage?: string;
+}
 
 class APIClient<T> {
   endpoint: string;
@@ -133,8 +186,36 @@ class APIClient<T> {
     this.endpoint = endpoint;
   }
 
-  get = (config?: AxiosRequestConfig): Promise<T> => {
-    return axiosInstance.get<T>(this.endpoint, config).then((res) => res.data);
+  get = (
+    config?: AxiosRequestConfig,
+    options?: APIClientOptions
+  ): Promise<T> => {
+    return axiosInstance.get<T>(this.endpoint, config).then((res) => {
+      this.handleSuccess(res, options);
+      return res.data;
+    });
+  };
+
+  post = (
+    data?: unknown,
+    config?: AxiosRequestConfig,
+    options?: APIClientOptions
+  ): Promise<T> => {
+    return axiosInstance.post<T>(this.endpoint, data, config).then((res) => {
+      this.handleSuccess(res, options);
+      return res.data;
+    });
+  };
+
+  private handleSuccess = (
+    _response: AxiosResponse,
+    options?: APIClientOptions
+  ): void => {
+    if (options?.showSuccessNotification) {
+      const message =
+        options.successMessage || "Operation completed successfully";
+      useNotificationStore.getState().addNotification("success", message);
+    }
   };
 }
 

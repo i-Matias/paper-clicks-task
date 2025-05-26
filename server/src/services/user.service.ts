@@ -47,12 +47,14 @@ const findByGithubId = async (githubId: string) => {
   });
 };
 
-const storeUserToken = async (userId: string, accessToken: string) => {
+const storeUserToken = async (
+  userId: string,
+  accessToken: string,
+  expiresIn: number = 8 * 60 * 60
+) => {
   if (!accessToken) {
     throw new Error("Access token is required");
   }
-
-  const expiresIn = 8 * 60 * 60;
 
   return TokenService.saveToken(userId, accessToken, expiresIn);
 };

@@ -1,3 +1,4 @@
+// filepath: /Users/matiasposhnjari/Documents/paper-clicks-task/client/src/components/starred-repositories/index.tsx
 import { useState, useMemo, useRef, useEffect } from "react";
 import repositoryService, {
   type Repository,
@@ -196,6 +197,7 @@ const StarredRepositories: React.FC = () => {
             chartType={chartType}
             onRepoChange={handleRepoChange}
             onChartTypeToggle={handleChartTypeToggle}
+            allRepositories={reposList}
           />
         </div>
       )}
@@ -248,21 +250,23 @@ const RepositoriesList: React.FC<RepositoriesListProps> = ({
 );
 
 interface CommitVisualizationSectionProps {
-  reposWithCommits: Repository[];
   selectedRepo: Repository | undefined;
   selectedRepoId: string | null;
   chartType: "line" | "bar";
   onRepoChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onChartTypeToggle: (type: "line" | "bar") => void;
+  allRepositories: Repository[];
+  reposWithCommits?: Repository[]; // Optional now, kept for backward compatibility
 }
 
 const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
-  reposWithCommits,
   selectedRepo,
   selectedRepoId,
   chartType,
   onRepoChange,
   onChartTypeToggle,
+  allRepositories,
+  // reposWithCommits is no longer used and made optional in the interface
 }) => {
   return (
     <div className="commit-visualization-section">
@@ -294,9 +298,13 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
       <div className="repository-selector">
         <CustomSelect
           id="repo-select"
-          options={reposWithCommits.map((repo) => ({
+          options={allRepositories.map((repo) => ({
             id: repo.id,
-            name: repo.fullName,
+            name: `${repo.fullName}${
+              !repo.commitCounts || repo.commitCounts.length === 0
+                ? " (No commit data)"
+                : ""
+            }`,
           }))}
           value={selectedRepoId}
           onChange={(value) => {
@@ -307,6 +315,11 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
           }}
           label="Select a repository to view commits:"
         />
+        <div className="repository-selector-help">
+          <small>
+            Note: Repositories without commit data are marked accordingly.
+          </small>
+        </div>
       </div>
 
       {selectedRepo && selectedRepo.commitCounts.length > 0 ? (

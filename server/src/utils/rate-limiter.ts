@@ -15,9 +15,6 @@ class RateLimiter {
   private retryAfterMap: Map<string, number> = new Map();
   private backoffMultiplier = 1.5; // Exponential backoff multiplier
 
-  /**
-   * Updates the rate limit information from GitHub API response headers
-   */
   updateFromHeaders(
     headers: Record<string, string>,
     resource: string = "core"
@@ -36,7 +33,6 @@ class RateLimiter {
         resource,
       };
 
-      // If we're getting low on remaining requests, log a warning
       if (remaining < rateLimit * 0.1) {
         console.warn(
           `GitHub API rate limit warning: ${remaining}/${rateLimit} requests remaining for ${resource}. Resets at ${new Date(
@@ -46,7 +42,6 @@ class RateLimiter {
       }
     }
 
-    // Check for retry-after header (used when already rate limited)
     const retryAfter = headers["retry-after"];
     if (retryAfter) {
       const seconds = parseInt(retryAfter, 10);
@@ -59,9 +54,6 @@ class RateLimiter {
     }
   }
 
-  /**
-   * Checks if we should throttle requests for a specific resource
-   */
   shouldThrottle(resource: string = "core"): boolean {
     // First check if we have a retry-after directive
     const retryAfterTime = this.retryAfterMap.get(resource);
@@ -69,26 +61,19 @@ class RateLimiter {
       return true;
     }
 
-    // Check our tracked rate limit info
     const rateLimitInfo = this.rateLimits[resource];
     if (!rateLimitInfo) return false;
 
-    // If we have fewer than 5% of requests remaining, implement throttling
     return rateLimitInfo.remaining < rateLimitInfo.limit * 0.05;
   }
 
-  /**
-   * Gets the recommended delay before making the next request
-   */
   getRecommendedDelay(resource: string = "core"): number {
-    // If we have a retry-after directive, use that
     const retryAfterTime = this.retryAfterMap.get(resource);
     if (retryAfterTime) {
       const delay = retryAfterTime - Date.now();
       return delay > 0 ? delay : 0;
     }
 
-    // Use rate limit data otherwise
     const rateLimitInfo = this.rateLimits[resource];
     if (!rateLimitInfo) return 0;
 
@@ -108,19 +93,13 @@ class RateLimiter {
     return 0;
   }
 
-  /**
-   * Calculates an exponential backoff delay for retries
-   */
   getExponentialBackoff(attempt: number, baseDelayMs: number = 1000): number {
     return Math.min(
       baseDelayMs * Math.pow(this.backoffMultiplier, attempt),
-      60000 // Cap at 1 minute
+      60000
     );
   }
 
-  /**
-   * Gets rate limit info for a resource
-   */
   getRateLimitInfo(resource: string = "core"): RateLimitInfo | null {
     return this.rateLimits[resource] || null;
   }

@@ -13,11 +13,17 @@ const githubCallback = catchAsync(async (req: Request, res: Response) => {
     return;
   }
 
-  const accessToken = await GithubService.getAccessToken(code);
-  const githubUser = await GithubService.getUserData(accessToken);
+  const tokenResponse = await GithubService.getAccessToken(code);
+  const githubUser = await GithubService.getUserData(
+    tokenResponse.access_token
+  );
   const user = await UserService.upsertUser(githubUser);
 
-  await UserService.storeUserToken(user.id, accessToken);
+  await UserService.storeUserToken(
+    user.id,
+    tokenResponse.access_token,
+    tokenResponse.expires_in
+  );
 
   const tokens = generateToken({ id: user.id, email: user.email });
 

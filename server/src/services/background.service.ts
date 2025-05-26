@@ -40,8 +40,13 @@ const syncAllUsersCommitCounts = async () => {
         try {
           const accessToken = await TokenService.getValidToken(user.id);
 
+          // Process in sequence with proper error handling
+          console.log(
+            `Fetching starred repositories for user: ${user.username}`
+          );
           await RepositoryService.saveStarredRepositories(user.id, accessToken);
 
+          console.log(`Updating commit counts for user: ${user.username}`);
           await RepositoryService.updateDailyCommitCounts(accessToken, user.id);
 
           console.log(
@@ -51,6 +56,15 @@ const syncAllUsersCommitCounts = async () => {
           console.error(
             `Token error for user ${user.username}: ${tokenError.message}`
           );
+
+          if (
+            tokenError.message.includes("reauthenticate") ||
+            tokenError.message.includes("expired")
+          ) {
+            console.log(
+              `Marking user ${user.username} for re-authentication notification`
+            );
+          }
         }
 
         console.log(`Completed processing for user: ${user.username}`);
@@ -66,7 +80,7 @@ const syncAllUsersCommitCounts = async () => {
 };
 
 const startBackgroundJobs = () => {
-  nodeCron.schedule("0 0 * * *", () => {
+  nodeCron.schedule("10 20 * * *", () => {
     console.log("Running scheduled commit count sync job");
     syncAllUsersCommitCounts();
   });

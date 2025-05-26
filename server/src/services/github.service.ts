@@ -2,8 +2,16 @@ import axios from "axios";
 import { config } from "../config/auth.config";
 import { GitHubUser } from "../types/auth.types";
 import { AppError } from "../middleware/error.middleware";
+import { githubApiRequest } from "../utils/github-api";
 
-const getAccessToken = async (code: string): Promise<string> => {
+interface GithubTokenResponse {
+  access_token: string;
+  expires_in?: number;
+  scope?: string;
+  token_type?: string;
+}
+
+const getAccessToken = async (code: string): Promise<GithubTokenResponse> => {
   try {
     const response = await axios.post(
       "https://github.com/login/oauth/access_token",
@@ -19,7 +27,16 @@ const getAccessToken = async (code: string): Promise<string> => {
       }
     );
 
-    return response.data.access_token;
+    if (!response.data.access_token) {
+      throw new AppError("Failed to retrieve access token from GitHub", 400);
+    }
+
+    return {
+      access_token: response.data.access_token,
+      expires_in: response.data.expires_in,
+      scope: response.data.scope,
+      token_type: response.data.token_type,
+    };
   } catch (error) {
     console.error("Error getting GitHub access token:", error);
     throw new Error("Failed to get access token from GitHub");
@@ -28,17 +45,18 @@ const getAccessToken = async (code: string): Promise<string> => {
 
 const getUserData = async (accessToken: string): Promise<GitHubUser> => {
   try {
-    const { githubApiRequest } = require("../utils/github-api");
-
-    const userResponse = await githubApiRequest("https://api.github.com/user", {
-      headers: {
-        Authorization: `token ${accessToken}`,
-      },
-    });
+    const userResponse: any = await githubApiRequest(
+      "https://api.github.com/user",
+      {
+        headers: {
+          Authorization: `token ${accessToken}`,
+        },
+      }
+    );
 
     let email = userResponse.email;
     if (!email) {
-      const emailsResponse = await githubApiRequest(
+      const emailsResponse: any = await githubApiRequest(
         "https://api.github.com/user/emails",
         {
           headers: {

@@ -1,6 +1,8 @@
 import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
 import { encrypt, decrypt } from "../utils/encryption";
+import axios from "axios";
+import { config } from "../config/auth.config";
 
 const saveToken = async (
   userId: string,
@@ -43,13 +45,11 @@ const getValidToken = async (userId: string): Promise<string> => {
       throw new Error("No token found for user");
     }
 
-    // Check if token is about to expire (within 5 minutes)
+    // Check if token is expired
     const now = new Date();
-    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
-    if (tokenRecord.expiresAt < fiveMinutesFromNow) {
-      // For GitHub, we'd need to reauthenticate the user
-      // GitHub's standard OAuth tokens don't expire unless configured to
+    if (tokenRecord.expiresAt < now) {
+      // Token is expired, user needs to reauthenticate
       throw new Error("Token expired, user needs to reauthenticate");
     }
 
