@@ -1,7 +1,6 @@
 import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
 import GithubService from "./github.service";
-import axios from "axios";
 import { AppError } from "../middleware/error.middleware";
 
 interface RepoData {
@@ -110,19 +109,24 @@ const fetchCommitsByDate = async (
     const commitsUrl = `https://api.github.com/repos/${repoFullName}/commits`;
 
     const endDate = until ? new Date(until) : new Date();
-    const startDate = since
-      ? new Date(since)
-      : new Date(endDate.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+    const startDate = since ? new Date(since) : null;
 
     console.log(
-      `Fetching commits for ${repoFullName} from ${startDate.toISOString()} to ${endDate.toISOString()}`
+      `Fetching commits for ${repoFullName} from ${
+        startDate ? startDate.toISOString() : "repository creation"
+      } to ${endDate.toISOString()}`
     );
 
     const params: Record<string, string> = {
       per_page: "100",
-      since: startDate.toISOString(),
       until: endDate.toISOString(),
     };
+
+    // Only add since parameter if we have a startDate
+    if (startDate) {
+      params.since = startDate.toISOString();
+    }
 
     const dailyCommits = new Map<string, number>();
     let page = 1;
@@ -206,8 +210,8 @@ const updateDailyCommitCounts = async (
   userId?: string
 ) => {
   return withPrisma(async () => {
-    const query = userId ? { where: { userId } } : undefined;
-    const repositories = await prisma.starredRepository.findMany(query);
+    const whereClause = userId ? { where: { userId } } : undefined;
+    const repositories = await prisma.starredRepository.findMany(whereClause);
 
     if (repositories.length === 0) {
       console.log(
@@ -222,11 +226,7 @@ const updateDailyCommitCounts = async (
       }`
     );
 
-    // Get the date 6 months ago to limit how far we look back
     const today = new Date();
-    const sixMonthsAgo = new Date(today);
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
     const results = [];
     let successCount = 0;
     let errorCount = 0;
@@ -236,19 +236,51 @@ const updateDailyCommitCounts = async (
       try {
         console.log(`Fetching daily commit activity for ${repo.fullName}`);
 
+        // Determine the starting point for fetching commits
+        let startDate: string | undefined;
+
+        // Find the latest existing commit date for this repository
+        const latestCommit = await prisma.commitCount.findFirst({
+          where: {
+            repositoryId: repo.id,
+          },
+          orderBy: {
+            date: "desc",
+          },
+        });
+
+        // If there's an existing commit, start from the day after the latest commit date
+        if (latestCommit) {
+          const latestCommitDate = new Date(latestCommit.date);
+          latestCommitDate.setDate(latestCommitDate.getDate() + 1);
+          startDate = latestCommitDate.toISOString();
+          console.log(
+            `Found existing commit data for ${repo.name}, starting from ${startDate}`
+          );
+        } else {
+          console.log(
+            `No existing commit data for ${repo.name}, fetching from repository creation`
+          );
+        }
+
         const dailyCommits = await fetchCommitsByDate(
           accessToken,
           repo.fullName,
-          sixMonthsAgo.toISOString(),
+          startDate,
           today.toISOString()
         );
 
         if (dailyCommits.length === 0) {
-          console.log(`No commits found in the last 6 months for ${repo.name}`);
+          const message = latestCommit
+            ? `No new commits found since ${
+                new Date(latestCommit.date).toISOString().split("T")[0]
+              } for ${repo.name}`
+            : `No commits found for ${repo.name}`;
+          console.log(message);
           results.push({
             repository: repo.name,
             commitsTracked: 0,
-            message: "No recent commits found",
+            message: latestCommit ? "No new commits found" : "No commits found",
           });
           continue;
         }
@@ -315,7 +347,6 @@ const updateDailyCommitCounts = async (
         console.error(`Failed to update commit count for ${repo.name}:`, error);
         errorCount++;
 
-        // Don't break the entire process for one failed repository
         results.push({
           repository: repo.name,
           error: error instanceof Error ? error.message : "Unknown error",
@@ -334,5 +365,4 @@ export default {
   saveStarredRepositories,
   getStarredRepositories,
   updateDailyCommitCounts,
-  fetchCommitsByDate,
 };

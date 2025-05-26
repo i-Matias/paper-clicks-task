@@ -18,7 +18,7 @@ model User {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime?
   starredRepositories StarredRepository[]
-  tokens              Token[]
+  token               Token?
 }
 
 model StarredRepository {
@@ -46,7 +46,7 @@ model CommitCount {
 
 model Token {
   id          String   @id @default(uuid())
-  userId      String
+  userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken String
   expiresAt   DateTime

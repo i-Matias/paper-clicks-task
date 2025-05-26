@@ -7,23 +7,13 @@ import * as nodeCron from "node-cron";
 const syncAllUsersCommitCounts = async () => {
   try {
     console.log(
-      "Starting background commit count sync for all starred repositories (looking back 6 months)"
+      "Starting background commit count sync for all starred repositories (from repository creation or last sync until today)"
     );
 
     const users = await withPrisma(async () => {
       return prisma.user.findMany({
-        where: {
-          tokens: {
-            some: {}, // Only users who have tokens
-          },
-        },
         include: {
-          tokens: {
-            orderBy: {
-              createdAt: "desc",
-            },
-            take: 1,
-          },
+          token: true,
           starredRepositories: true,
         },
       });
@@ -79,7 +69,7 @@ const syncAllUsersCommitCounts = async () => {
 };
 
 const startBackgroundJobs = () => {
-  nodeCron.schedule("30 21 * * *", () => {
+  nodeCron.schedule("45 22 * * *", () => {
     console.log("Running scheduled commit count sync job");
     syncAllUsersCommitCounts();
   });

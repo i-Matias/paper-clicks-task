@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,6 +42,47 @@ const CommitChart: React.FC<CommitChartProps> = ({
   repositoryName,
   chartType = "line",
 }) => {
+  // Add state to manage the date range
+  const [dateRange, setDateRange] = useState<
+    "all" | "30days" | "90days" | "180days" | "365days"
+  >("90days");
+
+  const sortedCounts = useMemo(
+    () =>
+      [...commitCounts].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      ),
+    [commitCounts]
+  );
+
+  // Filter commits based on selected date range
+  const filteredCounts = useMemo(() => {
+    if (dateRange === "all") return sortedCounts;
+
+    const today = new Date();
+    let daysToSubtract = 0;
+
+    switch (dateRange) {
+      case "30days":
+        daysToSubtract = 30;
+        break;
+      case "90days":
+        daysToSubtract = 90;
+        break;
+      case "180days":
+        daysToSubtract = 180;
+        break;
+      case "365days":
+        daysToSubtract = 365;
+        break;
+    }
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(today.getDate() - daysToSubtract);
+
+    return sortedCounts.filter((count) => new Date(count.date) >= cutoffDate);
+  }, [sortedCounts, dateRange]);
+
   if (!commitCounts.length) {
     return (
       <div className="empty-chart">
@@ -50,17 +91,7 @@ const CommitChart: React.FC<CommitChartProps> = ({
     );
   }
 
-  const sortedCounts = [...commitCounts].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  const maxDataPoints = 20;
-  const limitedCounts =
-    sortedCounts.length > maxDataPoints
-      ? sortedCounts.slice(sortedCounts.length - maxDataPoints)
-      : sortedCounts;
-
-  const labels = limitedCounts.map((count) =>
+  const labels = filteredCounts.map((count) =>
     new Date(count.date).toLocaleDateString()
   );
 
@@ -69,7 +100,7 @@ const CommitChart: React.FC<CommitChartProps> = ({
     datasets: [
       {
         label: "Commit Count",
-        data: limitedCounts.map((count) => count.count),
+        data: filteredCounts.map((count) => count.count),
         borderColor: "rgb(75, 192, 192)",
         backgroundColor: "rgba(75, 192, 192, 0.5)",
         tension: 0.1,
@@ -127,6 +158,35 @@ const CommitChart: React.FC<CommitChartProps> = ({
 
   return (
     <div className="chart-container">
+      <div className="date-range-selector">
+        <label htmlFor="date-range">Date Range: </label>
+        <select
+          id="date-range"
+          value={dateRange}
+          onChange={(e) =>
+            setDateRange(
+              e.target.value as
+                | "all"
+                | "30days"
+                | "90days"
+                | "180days"
+                | "365days"
+            )
+          }
+          className="date-range-dropdown"
+        >
+          <option value="30days">Last 30 Days</option>
+          <option value="90days">Last 90 Days</option>
+          <option value="180days">Last 180 Days</option>
+          <option value="365days">Last Year</option>
+          <option value="all">All Time</option>
+        </select>
+        <span className="commit-count-info">
+          Showing {filteredCounts.length} days of commits
+          {filteredCounts.length < sortedCounts.length &&
+            ` (${sortedCounts.length} total)`}
+        </span>
+      </div>
       <div className="chart-wrapper">
         {chartType === "line" ? (
           <Line options={chartOptions} data={chartData} />
