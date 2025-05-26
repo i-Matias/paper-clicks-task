@@ -2,19 +2,13 @@ import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
 import { encrypt, decrypt } from "../utils/encryption";
 
-/**
- * Saves a GitHub access token for a user
- * @param userId The user ID
- * @param accessToken The GitHub access token
- * @param expiresIn The token expiration time in seconds (default: 8 hours)
- */
+
 const saveToken = async (
   userId: string,
   accessToken: string,
   expiresIn: number = 8 * 60 * 60
 ) => {
   return withPrisma(async () => {
-    // Calculate expiration date
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
 
@@ -25,7 +19,6 @@ const saveToken = async (
       },
     });
 
-    // Store the encrypted token
     return prisma.token.create({
       data: {
         userId,
@@ -36,11 +29,7 @@ const saveToken = async (
   });
 };
 
-/**
- * Gets a valid access token for a user
- * @param userId The user ID
- * @returns A valid access token or throws an error
- */
+
 const getValidToken = async (userId: string): Promise<string> => {
   return withPrisma(async () => {
     const tokenRecord = await prisma.token.findFirst({
@@ -71,11 +60,7 @@ const getValidToken = async (userId: string): Promise<string> => {
   });
 };
 
-/**
- * Check if a user has a valid token
- * @param userId The user ID
- * @returns Whether the user has a valid token
- */
+
 const hasValidToken = async (userId: string): Promise<boolean> => {
   try {
     await getValidToken(userId);
@@ -85,10 +70,7 @@ const hasValidToken = async (userId: string): Promise<boolean> => {
   }
 };
 
-/**
- * Delete all tokens for a user
- * @param userId The user ID
- */
+/
 const deleteUserTokens = async (userId: string): Promise<void> => {
   return withPrisma(async () => {
     await prisma.token.deleteMany({

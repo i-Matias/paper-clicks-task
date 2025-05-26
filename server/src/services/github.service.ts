@@ -2,7 +2,6 @@ import axios from "axios";
 import { config } from "../config/auth.config";
 import { GitHubUser } from "../types/auth.types";
 import TokenService from "./token.service";
-import rateLimiter from "../utils/rate-limiter";
 
 const getAccessToken = async (code: string): Promise<string> => {
   try {
@@ -24,65 +23,6 @@ const getAccessToken = async (code: string): Promise<string> => {
   } catch (error) {
     console.error("Error getting GitHub access token:", error);
     throw new Error("Failed to get access token from GitHub");
-  }
-};
-
-const getAndStoreAccessToken = async (
-  code: string,
-  userId: string
-): Promise<string> => {
-  try {
-    const response = await axios.post(
-      "https://github.com/login/oauth/access_token",
-      {
-        client_id: config.github.clientId,
-        client_secret: config.github.clientSecret,
-        code,
-      },
-      {
-        headers: {
-          Accept: "application/json",
-        },
-      }
-    );
-
-    console.log(
-      "GitHub OAuth response data:",
-      JSON.stringify(response.data, null, 2)
-    );
-
-    const accessToken = response.data.access_token;
-
-    if (!accessToken) {
-      console.error("No access_token in GitHub response:", response.data);
-      throw new Error("GitHub did not provide an access token");
-    }
-
-    const expiresIn = 8 * 60 * 60;
-
-    try {
-      await TokenService.saveToken(userId, accessToken, expiresIn);
-    } catch (error: any) {
-      console.error("Error storing GitHub access token:", error);
-
-      if (
-        error.message &&
-        (error.message.includes("crypto") ||
-          error.message.includes("encryption") ||
-          error.message.includes("key"))
-      ) {
-        throw new Error(
-          `Failed to securely store access token: ${error.message}`
-        );
-      }
-
-      throw new Error("Failed to store GitHub access token");
-    }
-
-    return accessToken;
-  } catch (error) {
-    console.error("Error getting and storing GitHub access token:", error);
-    throw new Error("Failed to get and store access token from GitHub");
   }
 };
 
@@ -184,7 +124,6 @@ const getStarredRepositories = async (accessToken: string): Promise<any[]> => {
 
 export default {
   getAccessToken,
-  getAndStoreAccessToken,
   getUserData,
   getStarredRepositories,
 };

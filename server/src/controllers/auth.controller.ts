@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { generateToken } from "../utils/jwt";
-import catchAsync from "../utils/catchAsnyc";
+import catchAsync from "../utils/catchAsync";
 import { config } from "../config/auth.config";
 import GithubService from "../services/github.service";
 import UserService from "../services/user.service";
