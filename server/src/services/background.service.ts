@@ -40,7 +40,6 @@ const syncAllUsersCommitCounts = async () => {
         try {
           const accessToken = await TokenService.getValidToken(user.id);
 
-          // Process in sequence with proper error handling
           console.log(
             `Fetching starred repositories for user: ${user.username}`
           );
@@ -80,7 +79,7 @@ const syncAllUsersCommitCounts = async () => {
 };
 
 const startBackgroundJobs = () => {
-  nodeCron.schedule("10 20 * * *", () => {
+  nodeCron.schedule("30 21 * * *", () => {
     console.log("Running scheduled commit count sync job");
     syncAllUsersCommitCounts();
   });

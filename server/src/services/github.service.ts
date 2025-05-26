@@ -78,7 +78,7 @@ const getUserData = async (accessToken: string): Promise<GitHubUser> => {
       login: userResponse.login,
       avatar_url: userResponse.avatar_url,
       displayName: userResponse.name,
-      name: userResponse.name || userResponse.login,
+      name: userResponse.login,
       email: email,
       created_at: userResponse.created_at,
       updated_at: userResponse.updated_at,

@@ -1,3 +1,5 @@
+import "express-session";
+
 declare global {
   namespace Express {
     interface Request {
@@ -6,6 +8,12 @@ declare global {
         email: string;
       };
     }
+  }
+}
+
+declare module "express-session" {
+  interface SessionData {
+    oauthState?: string;
   }
 }
 

@@ -14,6 +14,7 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 const handleAuthRedirect = (message: string, redirectUrl: string): Error => {
@@ -161,7 +162,6 @@ axiosInstance.interceptors.response.use(
       const errorMessage = err instanceof Error ? err.message : "Network error";
       const message = `Request failed: ${errorMessage}`;
 
-      // Only show notification for network errors if not related to auth redirects
       if (
         !errorMessage.includes("Session expired") &&
         !errorMessage.includes("Redirecting to reauthorize")

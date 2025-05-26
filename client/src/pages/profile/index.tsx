@@ -66,8 +66,8 @@ export default function UserProfilePage() {
 
       <div className="profile-card-container">
         <Profile
-          id={user.id}
           username={user.username}
+          name={user.name}
           email={user.email}
           avatarUrl={user.avatarUrl}
           createdAt={user.createdAt}

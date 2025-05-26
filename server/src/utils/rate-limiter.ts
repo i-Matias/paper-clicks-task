@@ -1,7 +1,3 @@
-/**
- * Utility for managing GitHub API rate limits and implementing backoff strategies
- */
-
 interface RateLimitInfo {
   limit: number;
   remaining: number;
@@ -13,7 +9,7 @@ interface RateLimitInfo {
 class RateLimiter {
   private rateLimits: Record<string, RateLimitInfo> = {};
   private retryAfterMap: Map<string, number> = new Map();
-  private backoffMultiplier = 1.5; // Exponential backoff multiplier
+  private backoffMultiplier = 1.5;
 
   updateFromHeaders(
     headers: Record<string, string>,

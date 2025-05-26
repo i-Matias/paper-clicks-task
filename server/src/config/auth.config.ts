@@ -18,6 +18,9 @@ export const config = {
     clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   },
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+  session: {
+    secret: process.env.SESSION_SECRET || "super-secret-session-key",
+  },
 };
 
 export const validateConfig = () => {

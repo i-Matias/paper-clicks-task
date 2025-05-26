@@ -2,8 +2,8 @@ import React from "react";
 import "./styles.css";
 
 export interface ProfileProps {
-  id: string;
   username: string;
+  name: string;
   email: string;
   avatarUrl: string;
   createdAt: string;
@@ -25,6 +25,7 @@ const formatDate = (dateStr: string): string => {
 
 const Profile: React.FC<ProfileProps> = ({
   username,
+  name,
   email,
   avatarUrl,
   createdAt,
@@ -43,7 +44,9 @@ const Profile: React.FC<ProfileProps> = ({
             className="profile-avatar"
           />
           <div className="profile-details">
-            <h2>{username}</h2>
+            <h2>
+              {username} ({name}){" "}
+            </h2>
             <p className="profile-email" title={email}>
               {email}
             </p>

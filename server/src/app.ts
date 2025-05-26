@@ -1,9 +1,10 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import session from "express-session";
 import authRoutes from "./routes/auth.routes";
 import repositoryRoutes from "./routes/repository.routes";
-import { validateConfig } from "./config/auth.config";
+import { validateConfig, config } from "./config/auth.config";
 import { errorHandler } from "./middleware/error.middleware";
 
 dotenv.config();
@@ -21,6 +22,20 @@ app.use(
   })
 );
 app.use(express.json());
+
+app.use(
+  session({
+    secret: config.session.secret,
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: "lax", 
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    },
+  })
+);
 
 app.use(
   (req: express.Request, res: express.Response, next: express.NextFunction) => {

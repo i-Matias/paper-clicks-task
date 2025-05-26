@@ -14,8 +14,8 @@ interface GithubCallbackResponse {
 }
 
 export interface User {
-  id: string;
   username: string;
+  name: string;
   email: string;
   avatarUrl: string;
   createdAt: string;
@@ -40,9 +40,14 @@ class AuthService {
     }
   };
 
-  handleCallback = async (code: string) => {
+  handleCallback = async (code: string, state?: string) => {
     try {
-      const response = await this.callbackClient.get({ params: { code } });
+      const response = await this.callbackClient.get({
+        params: {
+          code,
+          state,
+        },
+      });
       return response;
     } catch (error) {
       console.error("Error handling callback:", error);

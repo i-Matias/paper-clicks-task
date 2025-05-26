@@ -16,6 +16,7 @@ export default function Callback() {
       try {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
+        const state = params.get("state");
 
         if (!code) {
           setAuthError("Authorization code not found.");
@@ -23,7 +24,7 @@ export default function Callback() {
           return;
         }
 
-        const data = await authService.handleCallback(code);
+        const data = await authService.handleCallback(code, state || undefined);
 
         if (data.tokens && data.tokens.accessToken) {
           setToken(data.tokens.accessToken, data.tokens.expiresIn);

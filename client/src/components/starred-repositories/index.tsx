@@ -7,7 +7,6 @@ import { useFetch } from "../../hooks/useFetch";
 import CommitChart from "../commit-chart";
 import "./styles.css";
 
-// Custom Select Component
 interface CustomSelectProps {
   options: { id: string; name: string }[];
   value: string | null;
@@ -29,7 +28,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
   const selectedOption = options.find((option) => option.id === value);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (selectRef.current && !selectRef.current.contains(e.target as Node)) {
@@ -43,7 +41,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     };
   }, []);
 
-  // Reset highlighted index when options change or dropdown opens
   useEffect(() => {
     if (isOpen) {
       const selectedIndex = options.findIndex((option) => option.id === value);
@@ -256,7 +253,6 @@ interface CommitVisualizationSectionProps {
   onRepoChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onChartTypeToggle: (type: "line" | "bar") => void;
   allRepositories: Repository[];
-  reposWithCommits?: Repository[]; // Optional now, kept for backward compatibility
 }
 
 const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
@@ -266,7 +262,6 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
   onRepoChange,
   onChartTypeToggle,
   allRepositories,
-  // reposWithCommits is no longer used and made optional in the interface
 }) => {
   return (
     <div className="commit-visualization-section">
@@ -315,11 +310,6 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
           }}
           label="Select a repository to view commits:"
         />
-        <div className="repository-selector-help">
-          <small>
-            Note: Repositories without commit data are marked accordingly.
-          </small>
-        </div>
       </div>
 
       {selectedRepo && selectedRepo.commitCounts.length > 0 ? (

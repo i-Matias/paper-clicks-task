@@ -11,6 +11,7 @@ const upsertUser = async (githubUser: GitHubUser) => {
       },
       update: {
         username: githubUser.login,
+        name: githubUser.displayName,
         email: githubUser.email,
         updatedAt: new Date(),
         avatarUrl: githubUser.avatar_url,
@@ -19,6 +20,7 @@ const upsertUser = async (githubUser: GitHubUser) => {
       create: {
         githubId: githubUser.id.toString(),
         username: githubUser.login,
+        name: githubUser.displayName,
         email: githubUser.email,
         avatarUrl: githubUser.avatar_url,
         createdAt: githubUser.created_at,
