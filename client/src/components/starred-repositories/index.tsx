@@ -5,6 +5,7 @@ import repositoryService, {
 } from "../../services/repository.service";
 import { useFetch } from "../../hooks/useFetch";
 import CommitChart from "../commit-chart";
+import { motion, AnimatePresence } from "framer-motion";
 import "./styles.css";
 
 interface CustomSelectProps {
@@ -81,10 +82,16 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
   return (
     <div className="custom-select-container" ref={selectRef}>
-      <label htmlFor={id} className="custom-select-label">
+      <motion.label
+        htmlFor={id}
+        className="custom-select-label"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         {label}
-      </label>
-      <div
+      </motion.label>
+      <motion.div
         className={`custom-select ${isOpen ? "open" : ""}`}
         tabIndex={0}
         id={id}
@@ -95,32 +102,56 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         role="combobox"
         aria-labelledby={id}
         data-has-content={Boolean(value)}
+        whileHover={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
       >
-        <div className="custom-select-value">
+        <motion.div className="custom-select-value">
           {selectedOption ? selectedOption.name : "Select repository"}
-        </div>
-        <div className="custom-select-icon"></div>
-        {isOpen && (
-          <ul className="custom-select-options" role="listbox">
-            {options.map((option, index) => (
-              <li
-                key={option.id}
-                className={`custom-select-option ${
-                  option.id === value ? "selected" : ""
-                } ${index === highlightedIndex ? "highlighted" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOptionClick(option.id);
-                }}
-                role="option"
-                aria-selected={option.id === value}
-              >
-                {option.name}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        </motion.div>
+        <motion.div
+          className="custom-select-icon"
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.3 }}
+        ></motion.div>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.ul
+              className="custom-select-options"
+              role="listbox"
+              initial={{ opacity: 0, y: -10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {options.map((option, index) => (
+                <motion.li
+                  key={option.id}
+                  className={`custom-select-option ${
+                    option.id === value ? "selected" : ""
+                  } ${index === highlightedIndex ? "highlighted" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOptionClick(option.id);
+                  }}
+                  role="option"
+                  aria-selected={option.id === value}
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03, duration: 0.2 }}
+                  whileHover={{
+                    backgroundColor: "rgba(9, 105, 218, 0.1)",
+                    x: 2,
+                  }}
+                >
+                  {option.name}
+                </motion.li>
+              ))}
+            </motion.ul>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 };
@@ -173,39 +204,83 @@ const StarredRepositories: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="repositories-loading">Loading repositories...</div>;
+    return (
+      <motion.div
+        className="repositories-loading"
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: 1,
+          scale: [1, 1.02, 1],
+        }}
+        transition={{
+          opacity: { duration: 0.4 },
+          scale: { repeat: Infinity, duration: 1.5 },
+        }}
+      >
+        Loading repositories...
+      </motion.div>
+    );
   }
 
   return (
-    <div className="repositories-container">
-      <div className="repositories-header">
+    <motion.div
+      className="repositories-container"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        className="repositories-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
         <h2>Starred GitHub Repositories</h2>
-      </div>
+      </motion.div>
 
-      {reposList.length === 0 ? (
-        <EmptyStateMessage />
-      ) : (
-        <div className="repositories-content">
-          <RepositoriesList repositories={reposList} />
-          <CommitVisualizationSection
-            reposWithCommits={reposWithCommits}
-            selectedRepo={selectedRepo}
-            selectedRepoId={selectedRepoId}
-            chartType={chartType}
-            onRepoChange={handleRepoChange}
-            onChartTypeToggle={handleChartTypeToggle}
-            allRepositories={reposList}
-          />
-        </div>
-      )}
-    </div>
+      <AnimatePresence mode="wait">
+        {reposList.length === 0 ? (
+          <EmptyStateMessage key="empty" />
+        ) : (
+          <motion.div
+            className="repositories-content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            key="content"
+          >
+            <RepositoriesList repositories={reposList} />
+            <CommitVisualizationSection
+              reposWithCommits={reposWithCommits}
+              selectedRepo={selectedRepo}
+              selectedRepoId={selectedRepoId}
+              chartType={chartType}
+              onRepoChange={handleRepoChange}
+              onChartTypeToggle={handleChartTypeToggle}
+              allRepositories={reposList}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
 const EmptyStateMessage: React.FC = () => (
-  <div className="no-repositories">
-    <p>You haven't starred any GitHub repositories yet.</p>
-  </div>
+  <motion.div
+    className="no-repositories"
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.5 }}
+  >
+    <motion.p
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.3, duration: 0.5 }}
+    >
+      You haven't starred any GitHub repositories yet.
+    </motion.p>
+  </motion.div>
 );
 
 interface RepositoriesListProps {
@@ -216,9 +291,29 @@ const RepositoriesList: React.FC<RepositoriesListProps> = ({
   repositories,
 }) => (
   <div className="repositories-grid">
-    {repositories.map((repo) => (
-      <div key={repo.id} className="repository-card">
-        <div className="repository-card-header">
+    {repositories.map((repo, index) => (
+      <motion.div
+        key={repo.id}
+        className="repository-card"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          delay: index * 0.1,
+          duration: 0.5,
+          type: "spring",
+          stiffness: 100,
+        }}
+        whileHover={{
+          scale: 1.03,
+          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <motion.div
+          className="repository-card-header"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: index * 0.1 + 0.3 }}
+        >
           <a
             href={repo.url}
             target="_blank"
@@ -227,26 +322,41 @@ const RepositoriesList: React.FC<RepositoriesListProps> = ({
           >
             {repo.fullName}
           </a>
-        </div>
+        </motion.div>
         {repo.description && (
-          <p className="repository-description">{repo.description}</p>
+          <motion.p
+            className="repository-description"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: index * 0.1 + 0.4 }}
+          >
+            {repo.description}
+          </motion.p>
         )}
-        <div className="repository-card-footer">
-          <a
+        <motion.div
+          className="repository-card-footer"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: index * 0.1 + 0.5 }}
+        >
+          <motion.a
             href={repo.url}
             target="_blank"
             rel="noopener noreferrer"
             className="view-repo-link"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             View Repository
-          </a>
-        </div>
-      </div>
+          </motion.a>
+        </motion.div>
+      </motion.div>
     ))}
   </div>
 );
 
 interface CommitVisualizationSectionProps {
+  reposWithCommits: Repository[];
   selectedRepo: Repository | undefined;
   selectedRepoId: string | null;
   chartType: "line" | "bar";
@@ -262,35 +372,65 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
   onRepoChange,
   onChartTypeToggle,
   allRepositories,
+  reposWithCommits,
 }) => {
   return (
-    <div className="commit-visualization-section">
-      <div className="visualization-header">
+    <motion.div
+      className="commit-visualization-section"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        delay: 0.4,
+        duration: 0.6,
+        type: "spring",
+        stiffness: 70,
+      }}
+    >
+      <motion.div
+        className="visualization-header"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+      >
         <h3>Commit Visualization</h3>
 
         {selectedRepo && selectedRepo.commitCounts.length > 0 && (
-          <div className="chart-toggle">
-            <button
+          <motion.div
+            className="chart-toggle"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, type: "spring" }}
+          >
+            <motion.button
               className={`toggle-btn ${chartType === "line" ? "active" : ""}`}
               onClick={() => onChartTypeToggle("line")}
               aria-label="Show line chart"
               title="Line Chart"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               <span className="toggle-icon line-icon"></span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               className={`toggle-btn ${chartType === "bar" ? "active" : ""}`}
               onClick={() => onChartTypeToggle("bar")}
               aria-label="Show bar chart"
               title="Bar Chart"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
             >
               <span className="toggle-icon bar-icon"></span>
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
 
-      <div className="repository-selector">
+      <motion.div
+        className="repository-selector"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+      >
         <CustomSelect
           id="repo-select"
           options={allRepositories.map((repo) => ({
@@ -310,24 +450,53 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
           }}
           label="Select a repository to view commits:"
         />
-      </div>
+      </motion.div>
 
-      {selectedRepo && selectedRepo.commitCounts.length > 0 ? (
-        <CommitChart
-          commitCounts={selectedRepo.commitCounts}
-          repositoryName={selectedRepo.fullName}
-          chartType={chartType}
-        />
-      ) : (
-        <div className="no-commits-message">
-          {selectedRepo ? (
-            <p>No commit data available for this repository.</p>
-          ) : (
-            <p>Select a repository to view commit data.</p>
-          )}
-        </div>
-      )}
-    </div>
+      <AnimatePresence mode="wait">
+        {selectedRepo && selectedRepo.commitCounts.length > 0 ? (
+          <motion.div
+            key="chart"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5, type: "spring" }}
+          >
+            <CommitChart
+              commitCounts={selectedRepo.commitCounts}
+              repositoryName={selectedRepo.fullName}
+              chartType={chartType}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            className="no-commits-message"
+            key="no-data"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.4 }}
+          >
+            {selectedRepo ? (
+              <motion.p
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                No commit data available for this repository.
+              </motion.p>
+            ) : (
+              <motion.p
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                Select a repository to view commit data.
+              </motion.p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

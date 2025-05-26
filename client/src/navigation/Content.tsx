@@ -5,7 +5,7 @@ import Login from "../pages/login/index";
 import Home from "../pages/home/index";
 import UserProfilePage from "../pages/profile/index";
 import PrivateRoute from "./PrivateRoute";
-import { Layout } from "../components/layout";
+import { AnimatedLayout } from "../components/layout";
 import LoadingSpinner from "../components/loading-spinner";
 
 export default function Content() {
@@ -20,9 +20,9 @@ export default function Content() {
           path="/"
           element={
             <PrivateRoute>
-              <Layout>
+              <AnimatedLayout>
                 <Home />
-              </Layout>
+              </AnimatedLayout>
             </PrivateRoute>
           }
         />
@@ -30,9 +30,9 @@ export default function Content() {
           path="/profile"
           element={
             <PrivateRoute>
-              <Layout>
+              <AnimatedLayout>
                 <UserProfilePage />
-              </Layout>
+              </AnimatedLayout>
             </PrivateRoute>
           }
         />

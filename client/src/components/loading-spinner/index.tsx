@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import "./styles.css";
 
 interface LoadingSpinnerProps {
@@ -18,10 +19,34 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     fullScreen ? "full-screen" : ""
   } ${overlay ? "overlay" : ""}`;
   return (
-    <div className={containerClass}>
-      <div className={`loading-spinner ${size}`}></div>
-      {message && <p className="loading-message">{message}</p>}
-    </div>
+    <motion.div
+      className={containerClass}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        className={`loading-spinner ${size}`}
+        animate={{
+          rotate: 360,
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          rotate: { repeat: Infinity, duration: 1.2, ease: "linear" },
+          scale: { repeat: Infinity, duration: 1.5, ease: "easeInOut" },
+        }}
+      ></motion.div>
+      {message && (
+        <motion.p
+          className="loading-message"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          {message}
+        </motion.p>
+      )}
+    </motion.div>
   );
 };
 
