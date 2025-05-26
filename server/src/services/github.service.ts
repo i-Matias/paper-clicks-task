@@ -1,7 +1,7 @@
 import axios from "axios";
 import { config } from "../config/auth.config";
 import { GitHubUser } from "../types/auth.types";
-import TokenService from "./token.service";
+import { AppError } from "../middleware/error.middleware";
 
 const getAccessToken = async (code: string): Promise<string> => {
   try {
@@ -113,12 +113,7 @@ const getStarredRepositories = async (accessToken: string): Promise<any[]> => {
 
     return allRepositories;
   } catch (error) {
-    console.error("Error fetching starred repositories:", error);
-    throw new Error(
-      `Failed to fetch starred repositories from GitHub: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
+    throw new AppError("Failed to fetch starred repositories from GitHub", 500);
   }
 };
 

@@ -17,12 +17,6 @@ const getStarredRepositories = catchAsync(
 
     const repositories = await RepositoryService.getStarredRepositories(userId);
 
-    RepositoryService.updateCommitCounts(accessToken, userId).catch(
-      (syncError) => {
-        console.error("Background commit sync error:", syncError);
-      }
-    );
-
     res.status(200).json({ repositories });
   }
 );
