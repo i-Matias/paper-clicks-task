@@ -2,7 +2,6 @@ import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
 import { encrypt, decrypt } from "../utils/encryption";
 
-
 const saveToken = async (
   userId: string,
   accessToken: string,
@@ -28,7 +27,6 @@ const saveToken = async (
     });
   });
 };
-
 
 const getValidToken = async (userId: string): Promise<string> => {
   return withPrisma(async () => {
@@ -60,7 +58,6 @@ const getValidToken = async (userId: string): Promise<string> => {
   });
 };
 
-
 const hasValidToken = async (userId: string): Promise<boolean> => {
   try {
     await getValidToken(userId);
@@ -70,7 +67,6 @@ const hasValidToken = async (userId: string): Promise<boolean> => {
   }
 };
 
-/
 const deleteUserTokens = async (userId: string): Promise<void> => {
   return withPrisma(async () => {
     await prisma.token.deleteMany({
