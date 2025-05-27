@@ -1,7 +1,6 @@
 client/node_modules
 server/node_modules
-client/env.development
-server/env
+server/.env.development
 server/src/generated
 server/dist
 .env
