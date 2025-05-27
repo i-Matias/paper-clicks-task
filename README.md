@@ -74,18 +74,3 @@ To stop and remove volumes (this will delete the database data):
 ```bash
 docker-compose down -v
 ```
-
-## Development Notes
-
-- The PostgreSQL database is accessible on port 5432
-- The database data is persisted in a Docker volume
-- Any changes to the code will trigger automatic rebuilds (hot reload)
-
-## Troubleshooting
-
-- If you encounter any database connection issues, ensure the database container is fully up before the server starts
-- If you need to rebuild the containers, use `docker-compose build` before starting them again
-
-## For Hiring Team
-
-This is a development setup only and not intended for production use. It's designed to be easy to run and evaluate the application without much configuration.
