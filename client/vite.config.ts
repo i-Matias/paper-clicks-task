@@ -6,16 +6,10 @@ export default defineConfig(() => {
   return {
     plugins: [react()],
     base: "/",
-    // server: {
-    //   proxy: {
-    //     // Proxy all /api requests to the backend server
-    //     "/api": {
-    //       target: "http://localhost:5001",
-    //       changeOrigin: true,
-    //       secure: false,
-    //     },
-    //   },
-    // },
+    server: {
+      host: "0.0.0.0",
+      port: 5173,
+    },
     define: {
       // By default, Vite doesn't include shims for NodeJS/
       // necessary for segment analytics lib to work

@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: paper-clicks-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: paper_clicks_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: paper-clicks-server
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/paper_clicks_db?schema=public
+      PORT: 5001
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      CLIENT_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:5173
+      JWT_SECRET: super-secret-key-for-development-only
+      ENCRYPTION_KEY: some-encryption-key-for-development-only
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./server/wait-for-db.sh:/app/wait-for-db.sh
+    networks:
+      - app-network
+    command: >
+      sh -c "
+        chmod +x /app/wait-for-db.sh &&
+        /app/wait-for-db.sh postgres &&
+        echo 'Database is up, running migrations...' &&
+        npx prisma generate &&
+        npx prisma migrate deploy &&
+        npm run dev
+      "
+
+  # Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: paper-clicks-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      VITE_API_URL: http://localhost:5001
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    command: npm run dev
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

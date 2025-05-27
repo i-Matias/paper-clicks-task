@@ -12,11 +12,11 @@ model User {
   id                  String              @id @default(uuid())
   githubId            String              @unique
   username            String
-  name                String?
   email               String              @unique
-  avatarUrl           String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime?
+  avatarUrl           String?
+  name                String?
   starredRepositories StarredRepository[]
   token               Token?
 }
@@ -29,10 +29,10 @@ model StarredRepository {
   description  String?
   url          String
   userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime?
   commitCounts CommitCount[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, repoId])
 }
@@ -42,16 +42,16 @@ model CommitCount {
   count        Int
   date         DateTime
   repositoryId String
-  repository   StarredRepository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   createdAt    DateTime          @default(now())
+  repository   StarredRepository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
 }
 
 model Token {
   id          String   @id @default(uuid())
   userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken String
   expiresAt   DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
