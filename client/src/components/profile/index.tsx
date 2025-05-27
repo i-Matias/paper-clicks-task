@@ -82,7 +82,7 @@ const Profile: React.FC<ProfileProps> = ({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              {username} ({name}){" "}
+              {username} {name ? `(${name})` : ""}
             </motion.h2>
             <motion.p
               className="profile-email"

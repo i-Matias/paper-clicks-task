@@ -7,7 +7,7 @@ export const config = {
     clientId: process.env.GITHUB_CLIENT_ID || "",
     clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
     callbackUrl: `http://localhost:5001/api/auth/github/callback`,
-    scope: "user:email",
+    scope: "user:email read:user repo",
   },
   jwt: {
     secret: process.env.JWT_SECRET || "super-secret-key",

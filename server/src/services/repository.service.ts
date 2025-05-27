@@ -43,7 +43,10 @@ const saveStarredRepositories = async (userId: string, accessToken: string) => {
 
       const savedRepo = await prisma.starredRepository.upsert({
         where: {
-          repoId: repoData.id.toString(),
+          userId_repoId: {
+            userId: userId,
+            repoId: repoData.id.toString(),
+          },
         },
         update: {
           name: repoData.name,
