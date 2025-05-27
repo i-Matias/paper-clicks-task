@@ -372,7 +372,6 @@ const CommitVisualizationSection: React.FC<CommitVisualizationSectionProps> = ({
   onRepoChange,
   onChartTypeToggle,
   allRepositories,
-  reposWithCommits,
 }) => {
   return (
     <motion.div
