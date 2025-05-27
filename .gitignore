@@ -3,3 +3,4 @@ server/node_modules
 client/env.development
 server/env
 server/src/generated
+server/dist
