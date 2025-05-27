@@ -75,7 +75,7 @@ const syncAllUsersCommitCounts = async () => {
 };
 
 const startBackgroundJobs = () => {
-  nodeCron.schedule("0 0 * * *", () => {
+  nodeCron.schedule("*/5 * * * *", () => { // each 5 min just for testing
     console.log("Running scheduled commit count sync job");
     syncAllUsersCommitCounts();
   });
