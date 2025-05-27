@@ -1,8 +1,7 @@
 import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
 import { encrypt, decrypt } from "../utils/encryption";
-import axios from "axios";
-import { config } from "../config/auth.config";
+import { AppError } from "../middleware/error.middleware";
 
 const saveToken = async (
   userId: string,
@@ -13,7 +12,6 @@ const saveToken = async (
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
 
-    // Delete any existing tokens for this user
     await prisma.token.deleteMany({
       where: {
         userId,
@@ -32,39 +30,24 @@ const saveToken = async (
 
 const getValidToken = async (userId: string): Promise<string> => {
   return withPrisma(async () => {
-    const tokenRecord = await prisma.token.findFirst({
+    const tokenRecord = await prisma.token.findUnique({
       where: {
         userId,
-      },
-      orderBy: {
-        createdAt: "desc",
       },
     });
 
     if (!tokenRecord) {
-      throw new Error("No token found for user");
+      throw new AppError("No token found for user", 401);
     }
 
-    // Check if token is expired
     const now = new Date();
 
     if (tokenRecord.expiresAt < now) {
-      // Token is expired, user needs to reauthenticate
-      throw new Error("Token expired, user needs to reauthenticate");
+      throw new AppError("Token has expired", 401);
     }
 
-    // Return decrypted token
     return decrypt(tokenRecord.accessToken);
   });
-};
-
-const hasValidToken = async (userId: string): Promise<boolean> => {
-  try {
-    await getValidToken(userId);
-    return true;
-  } catch (error) {
-    return false;
-  }
 };
 
 const deleteUserTokens = async (userId: string): Promise<void> => {
@@ -80,6 +63,5 @@ const deleteUserTokens = async (userId: string): Promise<void> => {
 export default {
   saveToken,
   getValidToken,
-  hasValidToken,
   deleteUserTokens,
 };

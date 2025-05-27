@@ -26,7 +26,6 @@ export const FadeIn = ({
   );
 };
 
-// Slide-in animation component
 export const SlideIn = ({
   children,
   direction = "up",
@@ -69,7 +68,6 @@ export const SlideIn = ({
   );
 };
 
-// Scale animation component
 export const ScaleIn = ({
   children,
   delay = 0,
@@ -93,7 +91,6 @@ export const ScaleIn = ({
   );
 };
 
-// Staggered children animation component
 export const Stagger = ({
   children,
   staggerDelay = 0.1,
@@ -125,7 +122,6 @@ export const Stagger = ({
   );
 };
 
-// Hover animation component
 export const HoverMotion = ({
   children,
   scale = 1.05,
@@ -147,7 +143,6 @@ export const HoverMotion = ({
   );
 };
 
-// Button animation component with bounce effect
 export const AnimatedButton = ({
   children,
   onClick,
@@ -173,7 +168,6 @@ export const AnimatedButton = ({
   );
 };
 
-// Page transition component
 export const PageTransition = ({ children }: { children: ReactNode }) => {
   return (
     <motion.div
@@ -187,7 +181,6 @@ export const PageTransition = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Infinite pulse animation
 export const Pulse = ({
   children,
   className = "",

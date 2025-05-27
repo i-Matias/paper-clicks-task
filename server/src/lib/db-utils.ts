@@ -1,5 +1,4 @@
 import { AppError } from "../middleware/error.middleware";
-import prisma from "./prisma";
 
 export async function withPrisma<T>(operation: () => Promise<T>): Promise<T> {
   try {

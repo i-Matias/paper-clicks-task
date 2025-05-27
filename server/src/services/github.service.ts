@@ -1,15 +1,8 @@
 import axios from "axios";
 import { config } from "../config/auth.config";
-import { GitHubUser } from "../types/auth.types";
+import { GithubTokenResponse, GitHubUser } from "../types/types";
 import { AppError } from "../middleware/error.middleware";
 import { githubApiRequest } from "../utils/github-api";
-
-interface GithubTokenResponse {
-  access_token: string;
-  expires_in?: number;
-  scope?: string;
-  token_type?: string;
-}
 
 const getAccessToken = async (code: string): Promise<GithubTokenResponse> => {
   try {
@@ -91,9 +84,6 @@ const getUserData = async (accessToken: string): Promise<GitHubUser> => {
 
 const getStarredRepositories = async (accessToken: string): Promise<any[]> => {
   try {
-    const { githubApiRequest } = require("../utils/github-api");
-
-    // Initialize an array to hold all repositories
     let allRepositories: any[] = [];
     let page = 1;
     let hasMorePages = true;

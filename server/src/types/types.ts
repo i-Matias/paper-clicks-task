@@ -14,6 +14,13 @@ export interface GitHubUser {
   updated_at: string;
 }
 
+export interface GithubTokenResponse {
+  access_token: string;
+  expires_in?: number;
+  scope?: string;
+  token_type?: string;
+}
+
 export interface AuthTokens {
   accessToken: string;
   expires: number;
@@ -29,4 +36,17 @@ export interface AuthResponse {
     accessToken: string;
     expiresIn: number;
   };
+}
+
+export interface RepoData {
+  id: number;
+  name: string;
+  full_name: string;
+  description?: string;
+  html_url: string;
+}
+
+export interface DailyCommitCount {
+  date: string;
+  count: number;
 }

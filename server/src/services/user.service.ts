@@ -1,7 +1,8 @@
 import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
-import { GitHubUser } from "../types/auth.types";
+import { GitHubUser } from "../types/types";
 import TokenService from "./token.service";
+import { AppError } from "../middleware/error.middleware";
 
 const upsertUser = async (githubUser: GitHubUser) => {
   return withPrisma(async () => {
@@ -55,7 +56,7 @@ const storeUserToken = async (
   expiresIn: number = 8 * 60 * 60
 ) => {
   if (!accessToken) {
-    throw new Error("Access token is required");
+    throw new AppError("Access token is required", 401);
   }
 
   return TokenService.saveToken(userId, accessToken, expiresIn);

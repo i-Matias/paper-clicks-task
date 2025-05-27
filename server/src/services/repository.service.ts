@@ -2,18 +2,7 @@ import prisma from "../lib/prisma";
 import { withPrisma } from "../lib/db-utils";
 import GithubService from "./github.service";
 import { AppError } from "../middleware/error.middleware";
-
-interface RepoData {
-  id: number;
-  name: string;
-  full_name: string;
-  description?: string;
-  html_url: string;
-}
-interface DailyCommitCount {
-  date: string;
-  count: number;
-}
+import { DailyCommitCount, RepoData } from "../types/types";
 
 const saveStarredRepositories = async (userId: string, accessToken: string) => {
   return withPrisma(async () => {
@@ -123,7 +112,6 @@ const fetchCommitsByDate = async (
       until: endDate.toISOString(),
     };
 
-    // Only add since parameter if we have a startDate
     if (startDate) {
       params.since = startDate.toISOString();
     }
@@ -236,10 +224,8 @@ const updateDailyCommitCounts = async (
       try {
         console.log(`Fetching daily commit activity for ${repo.fullName}`);
 
-        // Determine the starting point for fetching commits
         let startDate: string | undefined;
 
-        // Find the latest existing commit date for this repository
         const latestCommit = await prisma.commitCount.findFirst({
           where: {
             repositoryId: repo.id,
@@ -249,7 +235,6 @@ const updateDailyCommitCounts = async (
           },
         });
 
-        // If there's an existing commit, start from the day after the latest commit date
         if (latestCommit) {
           const latestCommitDate = new Date(latestCommit.date);
           latestCommitDate.setDate(latestCommitDate.getDate() + 1);
@@ -290,23 +275,19 @@ const updateDailyCommitCounts = async (
         );
         let repoCommitsAdded = 0;
 
-        // Process each day's commits
         for (const dailyCommit of dailyCommits) {
           const commitDate = new Date(dailyCommit.date);
 
-          // Check if we already have a commit count for this date
           const existingCount = await prisma.commitCount.findFirst({
             where: {
               repositoryId: repo.id,
               date: {
-                // Match the exact date
                 equals: commitDate,
               },
             },
           });
 
           if (existingCount) {
-            // Update existing count if it exists and if the count is different
             if (existingCount.count !== dailyCommit.count) {
               await prisma.commitCount.update({
                 where: { id: existingCount.id },
@@ -320,7 +301,6 @@ const updateDailyCommitCounts = async (
               repoCommitsAdded += dailyCommit.count;
             }
           } else {
-            // Create new count if none exists for this date
             await prisma.commitCount.create({
               data: {
                 count: dailyCommit.count,

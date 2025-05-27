@@ -42,7 +42,6 @@ const CommitChart: React.FC<CommitChartProps> = ({
   repositoryName,
   chartType = "line",
 }) => {
-  // Add state to manage the date range
   const [dateRange, setDateRange] = useState<
     "all" | "30days" | "90days" | "180days" | "365days"
   >("90days");
@@ -55,7 +54,6 @@ const CommitChart: React.FC<CommitChartProps> = ({
     [commitCounts]
   );
 
-  // Filter commits based on selected date range
   const filteredCounts = useMemo(() => {
     if (dateRange === "all") return sortedCounts;
 

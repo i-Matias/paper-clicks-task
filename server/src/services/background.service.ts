@@ -3,6 +3,7 @@ import { withPrisma } from "../lib/db-utils";
 import RepositoryService from "./repository.service";
 import TokenService from "./token.service";
 import * as nodeCron from "node-cron";
+import { AppError } from "../middleware/error.middleware";
 
 const syncAllUsersCommitCounts = async () => {
   try {
@@ -31,7 +32,7 @@ const syncAllUsersCommitCounts = async () => {
           const accessToken = await TokenService.getValidToken(user.id);
 
           console.log(
-            `Fetching starred repositories for user: ${user.username}`
+            `Updating starred repositories for user: ${user.username} during scheduled job`
           );
           await RepositoryService.saveStarredRepositories(user.id, accessToken);
 
@@ -59,17 +60,22 @@ const syncAllUsersCommitCounts = async () => {
         console.log(`Completed processing for user: ${user.username}`);
       } catch (error) {
         console.error(`Error processing user ${user.username}:`, error);
+        throw new AppError(
+          `Failed to process user ${user.username} during background sync`,
+          500
+        );
       }
     }
 
     console.log("Completed background commit count sync");
   } catch (error) {
     console.error("Background commit count sync failed:", error);
+    throw new AppError("Failed to sync commit counts for all users", 500);
   }
 };
 
 const startBackgroundJobs = () => {
-  nodeCron.schedule("45 22 * * *", () => {
+  nodeCron.schedule("0 0 * * *", () => {
     console.log("Running scheduled commit count sync job");
     syncAllUsersCommitCounts();
   });
